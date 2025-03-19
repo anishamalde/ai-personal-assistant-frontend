@@ -30,7 +30,15 @@
           "image": "./assets/splash-icon.png"
         }
       ],
-      "react-native-edge-to-edge"
+      "react-native-edge-to-edge",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(com.anonymous.amazonintelligence) to access your camera",
+          "microphonePermission": "Allow $(com.anonymous.amazonintelligence) to access your microphone",
+          "recordAudioAndroid": true
+        }
+      ]
     ]
   }
 }
