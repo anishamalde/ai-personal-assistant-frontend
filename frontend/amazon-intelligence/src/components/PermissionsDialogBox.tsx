@@ -24,13 +24,17 @@ const PermissionsDialogBox = ({
     <View>
       <Portal>
         <Dialog visible={visible} onDismiss={hideDialog}>
-          <Dialog.Title>Camera Permission</Dialog.Title>
+          <Dialog.Title>Requesting Permissions</Dialog.Title>
           <Dialog.Content>
             <Text variant="bodyMedium">{message}</Text>
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={hideDialog}>Cancel</Button>
-            <Button onPress={handlePermissionRequest}>Grant Permission</Button>
+            <Button onPress={hideDialog} mode="outlined">
+              Cancel
+            </Button>
+            <Button onPress={handlePermissionRequest} mode="contained">
+              Grant Permission
+            </Button>
           </Dialog.Actions>
         </Dialog>
       </Portal>

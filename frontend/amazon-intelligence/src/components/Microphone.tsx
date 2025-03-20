@@ -1,85 +1,96 @@
-import React, { useEffect, useRef } from "react";
-import { View, StyleSheet, Animated, Easing } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, StyleSheet } from "react-native";
 import { IconButton, useTheme } from "react-native-paper";
+import { useAudioRecorder, RecordingPresets, AudioModule } from "expo-audio";
+import { RecordingAnimation, PermissionsDialogBox } from "./index";
+import { useChat } from "../context/ChatContext";
 
-const RecordingIndicator = ({ isRecording }) => {
+enum PermissionStatus {
+  DENIED = "denied",
+  GRANTED = "granted",
+  UNDETERMINED = "undetermined",
+}
+
+interface PermissionResponse {
+  granted: boolean;
+  status: PermissionStatus;
+}
+
+const Microphone: React.FC = () => {
   const theme = useTheme();
-  const animations = [
-    useRef(new Animated.Value(1)).current,
-    useRef(new Animated.Value(1)).current,
-    useRef(new Animated.Value(1)).current,
-  ];
+  const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const [isRecording, setIsRecording] = useState<boolean>(false);
+  const [permission, setPermission] = useState<boolean | null>(null);
+  const { audioUri, setAudioUri } = useChat();
 
   useEffect(() => {
-    if (isRecording) {
-      // Start animation sequence for each dot with different delays
-      animations.forEach((anim, index) => {
-        createAnimation(anim, index);
-      });
-    } else {
-      // Reset animations when not recording
-      animations.forEach((anim) => {
-        Animated.timing(anim).stop();
-        anim.setValue(1);
-      });
-    }
-  }, [isRecording]);
+    checkPermission();
+  }, []);
 
-  const createAnimation = (
-    anim: Animated.Value | Animated.ValueXY,
-    index: number
-  ) => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(anim, {
-          toValue: 1.5,
-          duration: 300,
-          delay: index * 150,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(anim, {
-          toValue: 1,
-          duration: 300,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
+  const checkPermission = async (): Promise<void> => {
+    const permissionResponse: PermissionResponse =
+      await AudioModule.getRecordingPermissionsAsync();
+    setPermission(permissionResponse.status === PermissionStatus.GRANTED);
+  };
+
+  const requestPermission = async (): Promise<void> => {
+    const permissionResponse: PermissionResponse =
+      await AudioModule.requestRecordingPermissionsAsync();
+
+    const isGranted = permissionResponse.status === PermissionStatus.GRANTED;
+    setPermission(isGranted);
+  };
+
+  const handleMicPress = async (): Promise<void> => {
+    if (permission === true) {
+      if (!isRecording) {
+        await startRecording();
+        setIsRecording(true);
+      } else {
+        await stopRecording();
+        setIsRecording(false);
+      }
+    }
+  };
+
+  const startRecording = async (): Promise<void> => {
+    try {
+      await audioRecorder.prepareToRecordAsync();
+      await audioRecorder.record();
+      console.log("status", audioRecorder.isRecording);
+    } catch (error) {
+      console.error("Failed to start recording:", error);
+    }
+  };
+
+  const stopRecording = async (): Promise<void> => {
+    try {
+      await audioRecorder.stop();
+      setAudioUri(audioRecorder.uri);
+      console.log(audioUri);
+    } catch (error) {
+      console.error("Failed to stop recording:", error);
+    }
   };
 
   return (
-    <View style={styles.dotsContainer}>
-      {animations.map((anim, index) => (
-        <Animated.View
-          key={index}
-          style={[
-            styles.dot,
-            {
-              backgroundColor: isRecording ? theme.colors.primary : "#CCCCCC",
-              transform: [{ scale: anim }],
-            },
-          ]}
-        />
-      ))}
-    </View>
-  );
-};
-
-const Microphone = ({ onPress, isRecording = false }) => {
-  const theme = useTheme();
-
-  return (
     <View style={styles.container}>
+      {permission === false && (
+        <PermissionsDialogBox
+          message="We need your permission to access the microphone"
+          requestPermission={requestPermission}
+        />
+      )}
+
       <IconButton
         icon="microphone"
         size={80}
-        onPress={onPress}
+        onPress={handleMicPress}
         style={styles.micButton}
         iconColor={theme.colors.background}
         containerColor={isRecording ? theme.colors.error : theme.colors.primary}
       />
-      <RecordingIndicator isRecording={isRecording} />
+      <RecordingAnimation isRecording={isRecording} />
     </View>
   );
 };
@@ -94,17 +105,5 @@ const styles = StyleSheet.create({
   micButton: {
     margin: 0,
     borderRadius: 50,
-  },
-  dotsContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginTop: 20,
-    height: 20,
-  },
-  dot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginHorizontal: 5,
   },
 });

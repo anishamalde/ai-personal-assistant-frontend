@@ -7,15 +7,9 @@ export function Home() {
   const theme = useTheme();
   const styles = createStyles(theme);
 
-  const [recording, setRecording] = useState(false);
-
-  const toggleRecording = () => {
-    setRecording(!recording);
-  };
-
   return (
     <View style={styles.container}>
-      <Microphone isRecording={recording} onPress={toggleRecording} />
+      <Microphone />
     </View>
   );
 }

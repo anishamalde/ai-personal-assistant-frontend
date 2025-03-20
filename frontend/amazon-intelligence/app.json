@@ -36,7 +36,8 @@
         {
           "recordAudioAndroid": true
         }
-      ]
+      ],
+      "expo-audio"
     ]
   }
 }
