@@ -1,30 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { View, Image, StyleSheet, Text } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useChat } from "../../context/ChatContext";
 
 export function Chat() {
-  const [image, setImage] = useState<string | null>(null);
-
-  useEffect(() => {
-    const loadSavedImage = async () => {
-      try {
-        const savedImageUri = await AsyncStorage.getItem("lastCapturedImage");
-        if (savedImageUri) {
-          setImage(savedImageUri);
-        }
-      } catch (error) {
-        console.error("Error loading saved image:", error);
-      }
-    };
-
-    loadSavedImage();
-  }, []);
-
+  const { imageUri } = useChat();
   return (
     <View style={styles.container}>
-      {image ? (
+      {imageUri ? (
         <Image
-          source={{ uri: image }}
+          source={{ uri: imageUri }}
           style={styles.image}
           resizeMode="contain"
         />
@@ -46,13 +30,6 @@ const styles = StyleSheet.create({
   image: {
     width: "100%",
     height: "80%",
-    borderRadius: 10,
-    marginBottom: 20,
-  },
-  pathText: {
-    fontSize: 12,
-    color: "#555",
-    textAlign: "center",
   },
   noImageText: {
     fontSize: 18,

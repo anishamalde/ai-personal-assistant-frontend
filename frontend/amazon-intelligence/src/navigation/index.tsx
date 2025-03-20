@@ -1,40 +1,83 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { HeaderButton, Text } from "@react-navigation/elements";
+import { HeaderButton } from "@react-navigation/elements";
 import {
   createStaticNavigation,
   StaticParamList,
 } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { Icon } from "react-native-paper";
+import { Icon, useTheme } from "react-native-paper";
 import { Home, Profile, Chat, Camera, NotFound } from "./screens";
+import { TabIcon } from "../components";
 
 const HomeTabs = createBottomTabNavigator({
   screens: {
     Home: {
       screen: Home,
-      options: {
-        title: "Home",
-        tabBarIcon: () => <Icon source="home" size={20} />,
+      options: ({ navigation }) => {
+        const theme = useTheme();
+        return {
+          headerRight: () => (
+            <HeaderButton
+              onPress={() => {
+                navigation.navigate("Profile", { user: "jane" });
+              }}
+            >
+              <Icon
+                source="account-cog"
+                color={theme.colors.primary}
+                size={30}
+              />
+            </HeaderButton>
+          ),
+          tabBarIcon: ({ focused }) => (
+            <TabIcon source="home" focused={focused} />
+          ),
+        };
       },
     },
     Chat: {
       screen: Chat,
-      options: {
-        tabBarIcon: () => <Icon source="chat" size={20} />,
+      options: () => {
+        return {
+          tabBarIcon: ({ focused }) => (
+            <TabIcon source="chat" focused={focused} />
+          ),
+        };
       },
     },
     Camera: {
       screen: Camera,
-      options: ({ navigation }) => ({
-        presentation: "modal",
-        headerRight: () => (
-          <HeaderButton onPress={navigation.goBack}>
-            <Icon source="close" size={20} />
-          </HeaderButton>
-        ),
-        tabBarIcon: () => <Icon source="camera" size={20} />,
-      }),
+      options: ({ navigation }) => {
+        const theme = useTheme();
+        return {
+          presentation: "modal",
+          headerRight: () => (
+            <HeaderButton onPress={navigation.goBack}>
+              <Icon source="close" color={theme.colors.onSurface} size={30} />
+            </HeaderButton>
+          ),
+          tabBarIcon: ({ focused }) => (
+            <TabIcon source="camera" focused={focused} />
+          ),
+        };
+      },
     },
+  },
+  screenOptions: () => {
+    const theme = useTheme();
+    return {
+      tabBarStyle: {
+        backgroundColor: theme.colors.primary,
+        height: 110,
+        borderTopWidth: 0,
+      },
+      tabBarShowLabel: false,
+      tabBarIconStyle: {
+        color: theme.colors.tertiary,
+        width: 45,
+        height: 45,
+      },
+    };
   },
 });
 
@@ -44,7 +87,6 @@ const RootStack = createNativeStackNavigator({
     HomeTabs: {
       screen: HomeTabs,
       options: {
-        title: "Home",
         headerShown: false,
       },
     },

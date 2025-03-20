@@ -1,12 +1,6 @@
 import * as React from "react";
 import { View } from "react-native";
-import {
-  Button,
-  Dialog,
-  Portal,
-  PaperProvider,
-  Text,
-} from "react-native-paper";
+import { Button, Dialog, Portal, Text } from "react-native-paper";
 
 interface PermissionsDialogBoxProps {
   message?: string;
@@ -27,24 +21,20 @@ const PermissionsDialogBox = ({
   };
 
   return (
-    <PaperProvider>
-      <View>
-        <Portal>
-          <Dialog visible={visible} onDismiss={hideDialog}>
-            <Dialog.Title>Camera Permission</Dialog.Title>
-            <Dialog.Content>
-              <Text variant="bodyMedium">{message}</Text>
-            </Dialog.Content>
-            <Dialog.Actions>
-              <Button onPress={hideDialog}>Cancel</Button>
-              <Button onPress={handlePermissionRequest}>
-                Grant Permission
-              </Button>
-            </Dialog.Actions>
-          </Dialog>
-        </Portal>
-      </View>
-    </PaperProvider>
+    <View>
+      <Portal>
+        <Dialog visible={visible} onDismiss={hideDialog}>
+          <Dialog.Title>Camera Permission</Dialog.Title>
+          <Dialog.Content>
+            <Text variant="bodyMedium">{message}</Text>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={hideDialog}>Cancel</Button>
+            <Button onPress={handlePermissionRequest}>Grant Permission</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
+    </View>
   );
 };
 

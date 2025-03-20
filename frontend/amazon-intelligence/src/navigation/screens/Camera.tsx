@@ -1,20 +1,26 @@
 import { CameraType, CameraView, useCameraPermissions } from "expo-camera";
 import { useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { IconButton, Card, Button } from "react-native-paper";
+import {
+  IconButton,
+  Card,
+  Button,
+  ActivityIndicator,
+} from "react-native-paper";
 import { PermissionsDialogBox } from "../../components";
 import { useNavigation } from "@react-navigation/native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useChat } from "../../context/ChatContext";
 
 export function Camera() {
   const [permission, requestPermission] = useCameraPermissions();
   const ref = useRef<CameraView>(null);
-  const [uri, setUri] = useState<string | null>(null);
   const [facing, setFacing] = useState<CameraType>("back");
   const navigation = useNavigation();
 
+  const { imageUri, setImageUri, clearImage } = useChat();
+
   if (!permission) {
-    return <View />;
+    return <ActivityIndicator />;
   }
 
   if (!permission.granted) {
@@ -31,8 +37,7 @@ export function Camera() {
     try {
       const photo = await ref.current?.takePictureAsync();
       if (photo?.uri) {
-        setUri(photo.uri);
-        await AsyncStorage.setItem("lastCapturedImage", photo.uri);
+        setImageUri(photo.uri);
       }
     } catch (error) {
       console.error("Error taking or storing picture:", error);
@@ -44,17 +49,19 @@ export function Camera() {
   };
 
   const handleRetake = () => {
-    setUri(null);
+    setImageUri(null);
   };
 
   const navigateToChat = () => {
-    navigation.navigate("HomeTabs", { screen: "Chat" });
+    navigation.navigate("HomeTabs", {
+      screen: "Chat",
+    });
   };
 
   const renderPicture = () => {
     return (
       <Card>
-        <Card.Cover source={{ uri: uri }} />
+        <Card.Cover source={{ uri: imageUri }} />
         <Card.Actions>
           <Button onPress={handleRetake}>Retake</Button>
           <Button onPress={navigateToChat}>Looks Good</Button>
@@ -79,13 +86,13 @@ export function Camera() {
               iconColor="white"
               containerColor="grey"
               size={40}
-              onPress={handleRetake}
+              onPress={clearImage}
             />
             <IconButton
               icon="camera"
               iconColor="grey"
               containerColor="white"
-              size={40}
+              size={60}
               onPress={takePicture}
             />
             <IconButton
@@ -101,11 +108,9 @@ export function Camera() {
     );
   };
 
-  console.log(uri);
-
   return (
     <View style={styles.container}>
-      {uri ? renderPicture() : renderCamera()}
+      {imageUri ? renderPicture() : renderCamera()}
     </View>
   );
 }
