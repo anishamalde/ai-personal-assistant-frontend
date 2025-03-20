@@ -15,6 +15,8 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [audioUri, setAudioUri] = useState<string | null>(null);
 
+  console.log(audioUri);
+
   const clearImage = () => {
     setImageUri(null);
   };

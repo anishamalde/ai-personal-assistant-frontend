@@ -1,63 +1,53 @@
 import React, { useState, useEffect } from "react";
 import { View, StyleSheet } from "react-native";
 import { IconButton, useTheme } from "react-native-paper";
-import { useAudioRecorder, RecordingPresets, AudioModule } from "expo-audio";
+import { Audio } from "expo-av";
 import { RecordingAnimation, PermissionsDialogBox } from "./index";
 import { useChat } from "../context/ChatContext";
 
-enum PermissionStatus {
-  DENIED = "denied",
-  GRANTED = "granted",
-  UNDETERMINED = "undetermined",
-}
-
-interface PermissionResponse {
-  granted: boolean;
-  status: PermissionStatus;
-}
-
 const Microphone: React.FC = () => {
   const theme = useTheme();
-  const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const [recording, setRecording] = useState<Audio.Recording | undefined>();
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [permission, setPermission] = useState<boolean | null>(null);
-  const { audioUri, setAudioUri } = useChat();
+  const { setAudioUri } = useChat();
+  const [permissionResponse, requestPermission] = Audio.usePermissions();
 
   useEffect(() => {
     checkPermission();
-  }, []);
+  }, [permissionResponse]);
 
   const checkPermission = async (): Promise<void> => {
-    const permissionResponse: PermissionResponse =
-      await AudioModule.getRecordingPermissionsAsync();
-    setPermission(permissionResponse.status === PermissionStatus.GRANTED);
-  };
-
-  const requestPermission = async (): Promise<void> => {
-    const permissionResponse: PermissionResponse =
-      await AudioModule.requestRecordingPermissionsAsync();
-
-    const isGranted = permissionResponse.status === PermissionStatus.GRANTED;
-    setPermission(isGranted);
+    if (permissionResponse) {
+      setPermission(permissionResponse.status === "granted");
+    }
   };
 
   const handleMicPress = async (): Promise<void> => {
     if (permission === true) {
       if (!isRecording) {
         await startRecording();
-        setIsRecording(true);
       } else {
         await stopRecording();
-        setIsRecording(false);
       }
     }
   };
 
   const startRecording = async (): Promise<void> => {
     try {
-      await audioRecorder.prepareToRecordAsync();
-      await audioRecorder.record();
-      console.log("status", audioRecorder.isRecording);
+      // Configure audio mode for Android
+      await Audio.setAudioModeAsync({
+        // Android-only settings can go here if needed
+      });
+
+      console.log("Starting recording...");
+      const { recording } = await Audio.Recording.createAsync(
+        Audio.RecordingOptionsPresets.HIGH_QUALITY
+      );
+
+      setRecording(recording);
+      setIsRecording(true);
+      console.log("Recording started");
     } catch (error) {
       console.error("Failed to start recording:", error);
     }
@@ -65,9 +55,19 @@ const Microphone: React.FC = () => {
 
   const stopRecording = async (): Promise<void> => {
     try {
-      await audioRecorder.stop();
-      setAudioUri(audioRecorder.uri);
-      console.log(audioUri);
+      console.log("Stopping recording...");
+      if (!recording) return;
+
+      setIsRecording(false);
+      await recording.stopAndUnloadAsync();
+      await Audio.setAudioModeAsync({
+        // Android-only settings can go here if needed
+      });
+
+      const uri = recording.getURI();
+      setAudioUri(uri);
+      setRecording(undefined);
+      console.log("Recording stopped and stored at", uri);
     } catch (error) {
       console.error("Failed to stop recording:", error);
     }
@@ -78,7 +78,10 @@ const Microphone: React.FC = () => {
       {permission === false && (
         <PermissionsDialogBox
           message="We need your permission to access the microphone"
-          requestPermission={requestPermission}
+          requestPermission={() => {
+            requestPermission();
+            // Dialog will hide itself after the request
+          }}
         />
       )}
 
