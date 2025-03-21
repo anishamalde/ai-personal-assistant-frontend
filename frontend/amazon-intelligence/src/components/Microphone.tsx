@@ -1,75 +1,91 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet } from "react-native";
-import { IconButton, useTheme } from "react-native-paper";
-import { Audio } from "expo-av";
-import { RecordingAnimation, PermissionsDialogBox } from "./index";
+import { View, StyleSheet, ScrollView } from "react-native";
+import { IconButton, useTheme, Text, MD3Theme } from "react-native-paper";
+import { PermissionsDialogBox, RecordingAnimation } from "./index";
 import { useChat } from "../context/ChatContext";
+import {
+  ExpoSpeechRecognitionModule,
+  useSpeechRecognitionEvent,
+} from "expo-speech-recognition";
 
-const Microphone: React.FC = () => {
+const Microphone = () => {
   const theme = useTheme();
-  const [recording, setRecording] = useState<Audio.Recording | undefined>();
-  const [isRecording, setIsRecording] = useState<boolean>(false);
+  const styles = createStyles(theme);
+  const { audioTranscription, setAudioTranscription, clearAudio } = useChat();
+  const [recording, setRecording] = useState<boolean>(false);
+  const [transcript, setTranscript] = useState<string>("");
   const [permission, setPermission] = useState<boolean | null>(null);
-  const { setAudioUri } = useChat();
-  const [permissionResponse, requestPermission] = Audio.usePermissions();
+
+  useSpeechRecognitionEvent("start", () => {
+    setRecording(true);
+  });
+  useSpeechRecognitionEvent("end", () => {
+    setRecording(false);
+  });
+  useSpeechRecognitionEvent("result", (event) => {
+    setAudioTranscription(event.results[0]?.transcript || "");
+  });
+  useSpeechRecognitionEvent("error", (event) => {
+    console.log(
+      "Speech recognition error:",
+      event.error,
+      "message:",
+      event.message
+    );
+  });
 
   useEffect(() => {
     checkPermission();
-  }, [permissionResponse]);
+  }, []);
 
   const checkPermission = async (): Promise<void> => {
-    if (permissionResponse) {
-      setPermission(permissionResponse.status === "granted");
+    try {
+      const result =
+        await ExpoSpeechRecognitionModule.requestPermissionsAsync();
+      setPermission(result.granted);
+    } catch (error) {
+      console.error("Failed to check speech permission:", error);
+      setPermission(false);
     }
   };
 
   const handleMicPress = async (): Promise<void> => {
     if (permission === true) {
-      if (!isRecording) {
-        await startRecording();
+      if (!recording) {
+        await startSpeechRecognition();
       } else {
-        await stopRecording();
+        await stopSpeechRecognition();
       }
+    } else {
+      await checkPermission();
     }
   };
 
-  const startRecording = async (): Promise<void> => {
+  const startSpeechRecognition = async (): Promise<void> => {
     try {
-      // Configure audio mode for Android
-      await Audio.setAudioModeAsync({
-        // Android-only settings can go here if needed
+      clearAudio();
+      ExpoSpeechRecognitionModule.start({
+        lang: "en-UK",
+        interimResults: true,
+        maxAlternatives: 1,
+        continuous: false,
+        requiresOnDeviceRecognition: false,
+        addsPunctuation: false,
       });
-
-      console.log("Starting recording...");
-      const { recording } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY
-      );
-
-      setRecording(recording);
-      setIsRecording(true);
-      console.log("Recording started");
     } catch (error) {
-      console.error("Failed to start recording:", error);
+      console.error("Failed to start speech recognition:", error);
     }
   };
 
-  const stopRecording = async (): Promise<void> => {
+  const stopSpeechRecognition = async (): Promise<void> => {
     try {
-      console.log("Stopping recording...");
-      if (!recording) return;
+      await ExpoSpeechRecognitionModule.stop();
 
-      setIsRecording(false);
-      await recording.stopAndUnloadAsync();
-      await Audio.setAudioModeAsync({
-        // Android-only settings can go here if needed
-      });
-
-      const uri = recording.getURI();
-      setAudioUri(uri);
-      setRecording(undefined);
-      console.log("Recording stopped and stored at", uri);
+      if (transcript.trim()) {
+        setAudioTranscription(transcript);
+      }
     } catch (error) {
-      console.error("Failed to stop recording:", error);
+      console.error("Failed to stop speech recognition:", error);
     }
   };
 
@@ -77,36 +93,46 @@ const Microphone: React.FC = () => {
     <View style={styles.container}>
       {permission === false && (
         <PermissionsDialogBox
-          message="We need your permission to access the microphone"
-          requestPermission={() => {
-            requestPermission();
-            // Dialog will hide itself after the request
-          }}
+          message="We need your permission to access the microphone for speech recognition"
+          requestPermission={checkPermission}
         />
       )}
-
       <IconButton
         icon="microphone"
         size={80}
         onPress={handleMicPress}
-        style={styles.micButton}
         iconColor={theme.colors.background}
-        containerColor={isRecording ? theme.colors.error : theme.colors.primary}
+        containerColor={recording ? theme.colors.error : theme.colors.primary}
       />
-      <RecordingAnimation isRecording={isRecording} />
+      <RecordingAnimation isRecording={recording} />
+      {audioTranscription && (
+        <ScrollView style={styles.transcriptContainer}>
+          <Text variant="bodyMedium">{audioTranscription}</Text>
+        </ScrollView>
+      )}
     </View>
   );
 };
 
 export default Microphone;
 
-const styles = StyleSheet.create({
-  container: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  micButton: {
-    margin: 0,
-    borderRadius: 50,
-  },
-});
+const createStyles = (theme: MD3Theme) =>
+  StyleSheet.create({
+    container: {
+      alignItems: "center",
+      justifyContent: "center",
+      width: "100%",
+    },
+    transcriptContainer: {
+      maxHeight: 100,
+      width: "90%",
+      margin: 20,
+      borderWidth: 1,
+      borderColor: theme.colors.primary,
+      borderRadius: 8,
+      padding: 8,
+    },
+    statusText: {
+      color: theme.colors.error,
+    },
+  });

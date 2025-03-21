@@ -4,8 +4,8 @@ type ChatContextType = {
   imageUri: string | null;
   setImageUri: (uri: string | null) => void;
   clearImage: () => void;
-  audioUri: string | null;
-  setAudioUri: (uri: string | null) => void;
+  audioTranscription: string | null;
+  setAudioTranscription: (uri: string | null) => void;
   clearAudio: () => void;
 };
 
@@ -13,16 +13,16 @@ const ChatContext = createContext<ChatContextType | null>(null);
 
 export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [imageUri, setImageUri] = useState<string | null>(null);
-  const [audioUri, setAudioUri] = useState<string | null>(null);
-
-  console.log(audioUri);
+  const [audioTranscription, setAudioTranscription] = useState<string | null>(
+    null
+  );
 
   const clearImage = () => {
     setImageUri(null);
   };
 
   const clearAudio = () => {
-    setAudioUri(null);
+    setAudioTranscription(null);
   };
 
   return (
@@ -31,8 +31,8 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         imageUri,
         setImageUri,
         clearImage,
-        audioUri,
-        setAudioUri,
+        audioTranscription,
+        setAudioTranscription,
         clearAudio,
       }}
     >
