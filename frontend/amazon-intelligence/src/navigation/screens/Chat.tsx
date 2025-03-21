@@ -1,38 +1,84 @@
 import React from "react";
-import { View, Image, StyleSheet, Text } from "react-native";
+import { Image, StyleSheet, ScrollView, View } from "react-native";
+import { Text, Surface, useTheme, MD3Theme, Avatar } from "react-native-paper";
 import { useChat } from "../../context/ChatContext";
 
 export function Chat() {
-  const { imageUri } = useChat();
+  const { imageUri, audioTranscription } = useChat();
+  const theme = useTheme();
+  const styles = createStyles(theme);
+
   return (
-    <View style={styles.container}>
-      {imageUri ? (
-        <Image
-          source={{ uri: imageUri }}
-          style={styles.image}
-          resizeMode="contain"
-        />
-      ) : (
-        <Text style={styles.noImageText}>No image available</Text>
+    <ScrollView
+      style={styles.scrollView}
+      contentContainerStyle={styles.scrollViewContent}
+    >
+      {imageUri && (
+        <View style={styles.messageContainer}>
+          <Avatar.Icon size={40} icon="account" style={styles.avatar} />
+          <Image
+            source={{ uri: imageUri }}
+            style={styles.image}
+            resizeMode="cover"
+          />
+        </View>
       )}
-    </View>
+
+      {audioTranscription && (
+        <View style={styles.messageContainer}>
+          <Avatar.Icon size={40} icon="account" style={styles.avatar} />
+          <Surface style={styles.userMessageBubble}>
+            <Text style={styles.messageText}>{audioTranscription}</Text>
+          </Surface>
+        </View>
+      )}
+    </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-    backgroundColor: "#f5f5f5",
-  },
-  image: {
-    width: "100%",
-    height: "80%",
-  },
-  noImageText: {
-    fontSize: 18,
-    color: "#777",
-  },
-});
+const createStyles = (theme: MD3Theme) =>
+  StyleSheet.create({
+    scrollView: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    scrollViewContent: {
+      paddingVertical: 16,
+      paddingHorizontal: 16,
+      flexGrow: 1,
+      justifyContent: "flex-end",
+    },
+    messageContainer: {
+      flexDirection: "row",
+      marginBottom: 16,
+      alignItems: "flex-end",
+    },
+    avatar: {
+      backgroundColor: theme.colors.primary,
+      marginRight: 8,
+    },
+    userMessageBubble: {
+      backgroundColor: theme.colors.primary,
+      borderRadius: 20,
+      borderBottomLeftRadius: 4,
+      padding: 12,
+      maxWidth: "75%",
+      elevation: 1,
+    },
+    userImageBubble: {
+      backgroundColor: theme.colors.primary,
+      borderRadius: 20,
+      borderBottomLeftRadius: 4,
+      overflow: "hidden",
+      maxWidth: "75%",
+      elevation: 1,
+    },
+    messageText: {
+      color: theme.colors.onPrimary,
+    },
+    image: {
+      width: 200,
+      height: 200,
+      borderRadius: 16,
+    },
+  });
