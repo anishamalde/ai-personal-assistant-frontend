@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { StyleSheet, View } from "react-native";
 import { MD3Theme, useTheme } from "react-native-paper";
 import { Microphone } from "../../components";

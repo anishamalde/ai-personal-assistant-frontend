@@ -1,11 +1,12 @@
-import * as SplashScreen from "expo-splash-screen";
 import * as React from "react";
 import { Navigation } from "./navigation";
 import {
   MD3LightTheme as DefaultTheme,
   PaperProvider,
 } from "react-native-paper";
+import * as SplashScreen from "expo-splash-screen";
 import { ChatProvider } from "./context/ChatContext";
+import { AuthProvider } from "./context/AuthContext";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -22,20 +23,22 @@ const theme = {
 export function App() {
   return (
     <PaperProvider theme={theme}>
-      <ChatProvider>
-        <Navigation
-          linking={{
-            enabled: "auto",
-            prefixes: [
-              // Change the scheme to match your app's scheme defined in app.json
-              "helloworld://",
-            ],
-          }}
-          onReady={() => {
-            SplashScreen.hideAsync();
-          }}
-        />
-      </ChatProvider>
+      <AuthProvider>
+        <ChatProvider>
+          <Navigation
+            linking={{
+              enabled: "auto",
+              prefixes: [
+                // Change the scheme to match your app's scheme defined in app.json
+                "helloworld://",
+              ],
+            }}
+            onReady={() => {
+              SplashScreen.hideAsync();
+            }}
+          />
+        </ChatProvider>
+      </AuthProvider>
     </PaperProvider>
   );
 }
