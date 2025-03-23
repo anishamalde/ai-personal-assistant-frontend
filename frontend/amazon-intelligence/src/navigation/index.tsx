@@ -70,16 +70,14 @@ const HomeTabs = createBottomTabNavigator({
     return {
       tabBarStyle: {
         backgroundColor: theme.colors.primary,
-        height: 70,
+        height: 110,
         borderTopWidth: 0,
-        paddingBottom: 10,
-        paddingTop: 10,
       },
       tabBarShowLabel: false,
       tabBarIconStyle: {
         color: theme.colors.tertiary,
-        width: 40,
-        height: 40,
+        width: 45,
+        height: 45,
       },
     };
   },

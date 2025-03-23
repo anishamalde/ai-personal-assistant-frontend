@@ -9,6 +9,13 @@ import { ChatProvider } from "./context/ChatContext";
 import { AuthProvider } from "./context/AuthContext";
 import { Amplify } from "aws-amplify";
 import amplifyConfig from "../amplify-config";
+import { LogBox } from "react-native";
+
+// Ignore specific warnings that might be coming from dependencies
+LogBox.ignoreLogs([
+  "AsyncStorage has been extracted from react-native",
+  "Setting a timer for a long period of time",
+]);
 
 // Configure Amplify at the app root level
 Amplify.configure(amplifyConfig);
@@ -39,8 +46,7 @@ export function App() {
             linking={{
               enabled: "auto",
               prefixes: [
-                // Change the scheme to match your app's scheme defined in app.json
-                "helloworld://",
+                "amazonintelligence://", // Match the scheme in app.json
               ],
             }}
             onReady={() => {

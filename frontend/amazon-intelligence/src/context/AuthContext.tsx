@@ -7,6 +7,7 @@ import React, {
   useRef,
 } from "react";
 import { signIn, fetchAuthSession, fetchUserAttributes, signOut } from "aws-amplify/auth";
+import { Platform } from "react-native";
 
 interface UserData {
   nickname?: string;
@@ -90,13 +91,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const handleSignIn = async (username: string, password: string) => {
     try {
       if (__DEV__) {
-        console.log("Attempting to sign in user:", username);
+        console.log(`Attempting to sign in user on ${Platform.OS}: ${username}`);
       }
       
       const signInResult = await signIn({
         username,
         password,
       });
+      
+      if (__DEV__) {
+        console.log("Sign in result:", JSON.stringify(signInResult));
+      }
       
       if (signInResult.nextStep.signInStep === "DONE") {
         setIsAuthenticated(true);
@@ -107,6 +112,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (error) {
       if (__DEV__) {
         console.log("Sign in error:", error);
+        console.log("Error details:", JSON.stringify(error));
       }
       throw error;
     }
