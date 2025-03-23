@@ -11,20 +11,33 @@ import {
 const Microphone = () => {
   const theme = useTheme();
   const styles = createStyles(theme);
-  const { audioTranscription, setAudioTranscription, clearAudio } = useChat();
+  const {
+    interimTranscription,
+    setInterimTranscription,
+    setFinalTranscription,
+    clearTranscriptions,
+  } = useChat();
+
   const [recording, setRecording] = useState<boolean>(false);
-  const [transcript, setTranscript] = useState<string>("");
   const [permission, setPermission] = useState<boolean | null>(null);
 
   useSpeechRecognitionEvent("start", () => {
     setRecording(true);
   });
+
   useSpeechRecognitionEvent("end", () => {
     setRecording(false);
+    // When recording stops, set the final transcription
+    if (interimTranscription && interimTranscription.trim()) {
+      setFinalTranscription(interimTranscription);
+    }
   });
+
   useSpeechRecognitionEvent("result", (event) => {
-    setAudioTranscription(event.results[0]?.transcript || "");
+    // Update the interim transcription as the user speaks
+    setInterimTranscription(event.results[0]?.transcript || "");
   });
+
   useSpeechRecognitionEvent("error", (event) => {
     console.log(
       "Speech recognition error:",
@@ -63,7 +76,7 @@ const Microphone = () => {
 
   const startSpeechRecognition = async (): Promise<void> => {
     try {
-      clearAudio();
+      clearTranscriptions();
       ExpoSpeechRecognitionModule.start({
         lang: "en-UK",
         interimResults: true,
@@ -80,10 +93,6 @@ const Microphone = () => {
   const stopSpeechRecognition = async (): Promise<void> => {
     try {
       await ExpoSpeechRecognitionModule.stop();
-
-      if (transcript.trim()) {
-        setAudioTranscription(transcript);
-      }
     } catch (error) {
       console.error("Failed to stop speech recognition:", error);
     }
@@ -105,9 +114,9 @@ const Microphone = () => {
         containerColor={recording ? theme.colors.error : theme.colors.primary}
       />
       <RecordingAnimation isRecording={recording} />
-      {audioTranscription && (
+      {interimTranscription && (
         <ScrollView style={styles.transcriptContainer}>
-          <Text variant="bodyMedium">{audioTranscription}</Text>
+          <Text variant="bodyMedium">{interimTranscription}</Text>
         </ScrollView>
       )}
     </View>

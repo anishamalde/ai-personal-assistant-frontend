@@ -50,10 +50,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       isFetchingRef.current = true;
       const attributes = await fetchUserAttributes();
 
-      if (__DEV__) {
-        console.log("User attributes fetched successfully");
-      }
-
       setUserData({
         nickname: attributes.nickname,
         email: attributes.email,
@@ -149,13 +145,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const refreshUserData = async () => {
-    // Only fetch if authenticated and not already fetching
     if (isAuthenticated && !isFetchingRef.current) {
       await fetchUserData();
     }
   };
 
-  // Context value to provide
   const authContextValue = {
     isAuthenticated,
     isLoading,

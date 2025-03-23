@@ -9,18 +9,12 @@ export function Home() {
   const styles = createStyles(theme);
   const { userData } = useAuth();
 
-  // Removed the useEffect and refreshUserData call that was causing the loop
-
   return (
     <View style={styles.container}>
       {userData?.nickname ? (
-        <Text style={styles.welcomeText}>
-          Welcome, {userData.nickname}!
-        </Text>
+        <Text style={styles.welcomeText}>Welcome, {userData.nickname}!</Text>
       ) : (
-        <Text style={styles.welcomeText}>
-          Welcome!
-        </Text>
+        <Text style={styles.welcomeText}>Welcome!</Text>
       )}
       <Microphone />
     </View>
