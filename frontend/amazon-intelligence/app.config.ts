@@ -2,16 +2,13 @@ import 'dotenv/config';
 import { ExpoConfig } from '@expo/config';
 
 export default ({ config }: { config: ExpoConfig }) => {
-
   return {
     ...config,
+    // These values are available in app.json/app.config.js via Constants.expoConfig.extra
+    // They are not directly accessible in your JavaScript code
     extra: {
-      AWS_REGION: process.env.AWS_REGION,
-      COGNITO_USER_POOL_ID: process.env.COGNITO_USER_POOL_ID,
-      COGNITO_USER_POOL_CLIENT_ID: process.env.COGNITO_USER_POOL_CLIENT_ID,
-      COGNITO_IDENTITY_POOL_ID: process.env.COGNITO_IDENTITY_POOL_ID,
-      S3_BUCKET: process.env.S3_BUCKET,
-      API_ENDPOINT: process.env.API_ENDPOINT,
+      // You can access these in your code via Constants.expoConfig.extra
+      // For AWS configuration, use process.env.EXPO_PUBLIC_* variables directly in your code
     },
   };
 };

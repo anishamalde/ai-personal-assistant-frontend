@@ -4,17 +4,24 @@ import React, {
   useContext,
   useEffect,
   ReactNode,
+  useRef,
 } from "react";
-import { Amplify } from "aws-amplify";
-import amplifyConfig from "../../amplify-config";
-import { signIn, fetchAuthSession } from "aws-amplify/auth";
+import { signIn, fetchAuthSession, fetchUserAttributes, signOut } from "aws-amplify/auth";
 
-Amplify.configure(amplifyConfig);
+interface UserData {
+  nickname?: string;
+  email?: string;
+  sub?: string;
+  [key: string]: string | undefined;
+}
 
 interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
+  userData: UserData | null;
   signIn: (username: string, password: string) => Promise<any>;
+  signOut: () => Promise<void>;
+  refreshUserData: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -22,19 +29,58 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const isFetchingRef = useRef(false);
 
   useEffect(() => {
     checkAuthState();
   }, []);
+
+  const fetchUserData = async () => {
+    // Prevent multiple simultaneous calls
+    if (isFetchingRef.current) return null;
+    
+    try {
+      isFetchingRef.current = true;
+      const attributes = await fetchUserAttributes();
+      
+      if (__DEV__) {
+        console.log("User attributes fetched successfully");
+      }
+      
+      setUserData({
+        nickname: attributes.nickname,
+        email: attributes.email,
+        sub: attributes.sub,
+        ...attributes
+      });
+      
+      return attributes;
+    } catch (error) {
+      if (__DEV__) {
+        console.log("Error fetching user attributes:", error);
+      }
+      return null;
+    } finally {
+      isFetchingRef.current = false;
+    }
+  };
 
   const checkAuthState = async () => {
     try {
       setIsLoading(true);
       // Check if user is authenticated by trying to get the current session
       const session = await fetchAuthSession();
-      setIsAuthenticated(session.tokens !== undefined);
+      const isAuth = session.tokens !== undefined;
+      setIsAuthenticated(isAuth);
+      
+      if (isAuth) {
+        await fetchUserData();
+      }
     } catch (error) {
-      console.log("Auth check error:", error);
+      if (__DEV__) {
+        console.log("Auth check error:", error);
+      }
       setIsAuthenticated(false);
     } finally {
       setIsLoading(false);
@@ -43,21 +89,53 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const handleSignIn = async (username: string, password: string) => {
     try {
-      console.log("trying to sign in ");
+      if (__DEV__) {
+        console.log("Attempting to sign in user:", username);
+      }
+      
       const signInResult = await signIn({
         username,
         password,
       });
-      console.log(signInResult);
-
+      
       if (signInResult.nextStep.signInStep === "DONE") {
         setIsAuthenticated(true);
+        await fetchUserData();
       }
 
       return signInResult;
     } catch (error) {
-      console.log("Sign in error:", error);
+      if (__DEV__) {
+        console.log("Sign in error:", error);
+      }
       throw error;
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      if (__DEV__) {
+        console.log("Signing out user");
+      }
+      
+      await signOut();
+      setIsAuthenticated(false);
+      setUserData(null);
+      
+      if (__DEV__) {
+        console.log("User signed out successfully");
+      }
+    } catch (error) {
+      if (__DEV__) {
+        console.log("Sign out error:", error);
+      }
+    }
+  };
+
+  const refreshUserData = async () => {
+    // Only fetch if authenticated and not already fetching
+    if (isAuthenticated && !isFetchingRef.current) {
+      await fetchUserData();
     }
   };
 
@@ -65,7 +143,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const authContextValue = {
     isAuthenticated,
     isLoading,
+    userData,
     signIn: handleSignIn,
+    signOut: handleSignOut,
+    refreshUserData,
   };
 
   return (

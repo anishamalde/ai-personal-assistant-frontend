@@ -42,7 +42,6 @@
   "devDependencies": {
     "@babel/core": "^7.20.0",
     "@types/react": "~18.3.12",
-    "react-native-dotenv": "^3.4.11",
     "typescript": "^5.7.2"
   },
   "private": true,

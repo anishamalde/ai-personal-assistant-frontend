@@ -1,51 +1,90 @@
-# Starter Template with React Navigation
+# Amazon Intelligence Frontend
 
-This is a minimal starter template for React Native apps using Expo and React Navigation.
+This is a React Native app using Expo and React Navigation with AWS Amplify for authentication.
 
-It includes the following:
+## Features
 
-- Example [Native Stack](https://reactnavigation.org/docs/native-stack-navigator) with a nested [Bottom Tab](https://reactnavigation.org/docs/bottom-tab-navigator)
-- Web support with [React Native for Web](https://necolas.github.io/react-native-web/)
-- TypeScript support and configured for React Navigation
-- Automatic deep link and URL handling configuration
-- Expo [Development Build](https://docs.expo.dev/develop/development-builds/introduction/) with [Continuous Native Generation](https://docs.expo.dev/workflow/continuous-native-generation/)
-- Edge-to-edge configured on Android with [`react-native-edge-to-edge`](https://www.npmjs.com/package/react-native-edge-to-edge)
+- Authentication with AWS Cognito
+- React Navigation with Native Stack and Bottom Tab navigation
+- Web support with React Native for Web
+- TypeScript support
+- Automatic deep link and URL handling
+- Expo Development Build with Continuous Native Generation
+- Edge-to-edge configured on Android
 
 ## Getting Started
 
-1. Create a new project using this template:
+1. Clone the repository:
 
    ```sh
-   npx create-expo-app@latest --template react-navigation/template
+   git clone <repository-url>
+   cd amazon-intelligence
    ```
 
-2. Edit the `app.json` file to configure the `name`, `slug`, `scheme` and bundle identifiers (`ios.bundleIdentifier` and `android.bundleIdentifier`) for your app.
+2. Install dependencies:
 
-3. Edit the `src/App.tsx` file to start working on your app.
+   ```sh
+   npm install
+   ```
 
-## Running the app
+3. Set up environment variables:
 
-- Install the dependencies:
+   Copy the `.env.example` file to `.env` and fill in your AWS credentials:
 
-  ```sh
-  npm install
-  ```
+   ```sh
+   cp .env.example .env
+   ```
 
-- Start the development server:
+   Then edit the `.env` file with your AWS configuration values.
 
-  ```sh
-  npm start
-  ```
+4. Start the development server:
 
-- Build and run iOS and Android development builds:
+   ```sh
+   npm start
+   ```
 
-  ```sh
-  npm run ios
-  # or
-  npm run android
-  ```
+5. Build and run iOS and Android development builds:
 
-- In the terminal running the development server, press `i` to open the iOS simulator, `a` to open the Android device or emulator, or `w` to open the web browser.
+   ```sh
+   npm run ios
+   # or
+   npm run android
+   ```
+
+## Environment Configuration
+
+The app uses Expo's built-in environment variable system. Make sure to set these in your `.env` file:
+
+- `EXPO_PUBLIC_AWS_REGION`: Your AWS region (e.g., us-west-2)
+- `EXPO_PUBLIC_COGNITO_USER_POOL_ID`: Your Cognito User Pool ID
+- `EXPO_PUBLIC_COGNITO_USER_POOL_CLIENT_ID`: Your Cognito User Pool Client ID
+- `EXPO_PUBLIC_COGNITO_IDENTITY_POOL_ID`: Your Cognito Identity Pool ID (optional)
+- `EXPO_PUBLIC_S3_BUCKET`: Your S3 bucket name (optional)
+- `EXPO_PUBLIC_API_ENDPOINT`: Your API Gateway endpoint (optional)
+
+Note: All environment variables must use the `EXPO_PUBLIC_` prefix to be accessible in the client code. These variables are automatically inlined during the build process.
+
+## Production Deployment
+
+For production deployments with EAS (Expo Application Services):
+
+1. Set up secrets in EAS:
+   ```sh
+   eas secret:create --scope project --name EXPO_PUBLIC_COGNITO_USER_POOL_ID --value us-west-2_yourUserPoolId
+   ```
+
+2. Or define them in your `eas.json` build profiles:
+   ```json
+   {
+     "build": {
+       "production": {
+         "env": {
+           "EXPO_PUBLIC_AWS_REGION": "us-west-2"
+         }
+       }
+     }
+   }
+   ```
 
 ## Notes
 
@@ -53,12 +92,19 @@ This project uses a [development build](https://docs.expo.dev/develop/developmen
 
 We highly recommend using the development builds for normal development and testing.
 
-The `ios` and `android` folder are gitignored in the project by default as they are automatically generated during the build process ([Continuous Native Generation](https://docs.expo.dev/workflow/continuous-native-generation/)). This means that you should not edit these folders directly and use [config plugins](https://docs.expo.dev/config-plugins/) instead. However, if you need to edit these folders, you can remove them from the `.gitignore` file so that they are tracked by git.
+## Security Considerations
+
+- Variables with the `EXPO_PUBLIC_` prefix are embedded in your app bundle and visible to users
+- For sensitive operations, consider using a backend service or AWS IAM roles
+- Use Amazon Cognito Identity Pools with IAM roles for secure AWS service access
+- Implement token-based authentication for sensitive API calls
 
 ## Resources
 
 - [React Navigation documentation](https://reactnavigation.org/)
 - [Expo documentation](https://docs.expo.dev/)
+- [AWS Amplify documentation](https://docs.amplify.aws/)
+- [Expo Environment Variables](https://docs.expo.dev/guides/environment-variables/)
 
 ---
 

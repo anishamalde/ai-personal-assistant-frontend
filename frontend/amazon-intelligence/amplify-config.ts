@@ -1,48 +1,39 @@
 import { Amplify } from 'aws-amplify';
-import Constants from 'expo-constants';
 
-const env = Constants.expoConfig?.extra || {};
-
-const requiredVars = [
-  'COGNITO_USER_POOL_ID', 
-  'COGNITO_USER_POOL_CLIENT_ID',
-  'AWS_REGION'
-];
-
-const missingVars = requiredVars.filter(varName => !env[varName]);
-if (missingVars.length > 0) {
-  console.warn(`Missing required environment variables: ${missingVars.join(', ')}`);
-}
-
+// Configuration using Expo's environment variables with fallbacks for development
 const amplifyConfig = {
   Auth: {
     Cognito: {
-      userPoolId: env.COGNITO_USER_POOL_ID,
-      userPoolClientId: env.COGNITO_USER_POOL_CLIENT_ID,
-      identityPoolId: env.COGNITO_IDENTITY_POOL_ID,
-      region: env.AWS_REGION || 'us-west-2',
+      userPoolId: process.env.EXPO_PUBLIC_COGNITO_USER_POOL_ID || 'us-west-2_yourUserPoolId',
+      userPoolClientId: process.env.EXPO_PUBLIC_COGNITO_USER_POOL_CLIENT_ID || 'yourUserPoolClientId',
+      identityPoolId: process.env.EXPO_PUBLIC_COGNITO_IDENTITY_POOL_ID || 'us-west-2:yourIdentityPoolId',
+      region: process.env.EXPO_PUBLIC_AWS_REGION || 'us-west-2',
     }
   },
-  Storage: env.S3_BUCKET ? {
+  Storage: {
     S3: {
-      bucket: env.S3_BUCKET,
-      region: env.COGNITO_REGION || 'us-west-2',
+      bucket: process.env.EXPO_PUBLIC_S3_BUCKET || 'your-s3-bucket-name',
+      region: process.env.EXPO_PUBLIC_AWS_REGION || 'us-west-2',
     }
-  } : undefined,
-  API: env.API_ENDPOINT ? {
+  },
+  API: {
     REST: {
       API: {
-        endpoint: env.API_ENDPOINT
+        endpoint: process.env.EXPO_PUBLIC_API_ENDPOINT || 'https://your-api-id.execute-api.region.amazonaws.com/stage/'
       }
     }
-  } : undefined
+  }
 };
 
-try {
-  Amplify.configure(amplifyConfig);
-  console.log('Amplify configuration successful');
-} catch (error) {
-  console.error('Amplify configuration error:', error);
+// For development only - remove in production
+if (__DEV__) {
+  console.log('Amplify configuration loaded with:', {
+    userPoolId: amplifyConfig.Auth.Cognito.userPoolId,
+    userPoolClientId: amplifyConfig.Auth.Cognito.userPoolClientId?.substring(0, 5) + '...',
+    region: amplifyConfig.Auth.Cognito.region,
+    bucket: amplifyConfig.Storage.S3.bucket,
+    hasApiEndpoint: !!amplifyConfig.API.REST.API.endpoint
+  });
 }
 
 export default amplifyConfig;

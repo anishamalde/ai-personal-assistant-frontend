@@ -21,7 +21,7 @@ const HomeTabs = createBottomTabNavigator({
           headerRight: () => (
             <HeaderButton
               onPress={() => {
-                navigation.navigate("Profile", { user: "jane" });
+                navigation.navigate("Profile");
               }}
             >
               <Icon
@@ -70,14 +70,16 @@ const HomeTabs = createBottomTabNavigator({
     return {
       tabBarStyle: {
         backgroundColor: theme.colors.primary,
-        height: 110,
+        height: 70,
         borderTopWidth: 0,
+        paddingBottom: 10,
+        paddingTop: 10,
       },
       tabBarShowLabel: false,
       tabBarIconStyle: {
         color: theme.colors.tertiary,
-        width: 45,
-        height: 45,
+        width: 40,
+        height: 40,
       },
     };
   },
@@ -106,14 +108,8 @@ const RootStack = createNativeStackNavigator({
     },
     Profile: {
       screen: Profile,
-      linking: {
-        path: ":user(@[a-zA-Z0-9-_]+)",
-        parse: {
-          user: (value) => value.replace(/^@/, ""),
-        },
-        stringify: {
-          user: (value) => `@${value}`,
-        },
+      options: {
+        title: "Your Profile",
       },
     },
     NotFound: {

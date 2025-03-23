@@ -7,6 +7,16 @@ import {
 import * as SplashScreen from "expo-splash-screen";
 import { ChatProvider } from "./context/ChatContext";
 import { AuthProvider } from "./context/AuthContext";
+import { Amplify } from "aws-amplify";
+import amplifyConfig from "../amplify-config";
+
+// Configure Amplify at the app root level
+Amplify.configure(amplifyConfig);
+
+// Only log in development
+if (__DEV__) {
+  console.log("Amplify configured in App.tsx");
+}
 
 SplashScreen.preventAutoHideAsync();
 
