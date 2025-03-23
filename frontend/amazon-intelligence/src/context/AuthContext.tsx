@@ -6,7 +6,12 @@ import React, {
   ReactNode,
   useRef,
 } from "react";
-import { signIn, fetchAuthSession, fetchUserAttributes, signOut } from "aws-amplify/auth";
+import {
+  signIn,
+  fetchAuthSession,
+  fetchUserAttributes,
+  signOut,
+} from "aws-amplify/auth";
 import { Platform } from "react-native";
 
 interface UserData {
@@ -40,22 +45,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const fetchUserData = async () => {
     // Prevent multiple simultaneous calls
     if (isFetchingRef.current) return null;
-    
+
     try {
       isFetchingRef.current = true;
       const attributes = await fetchUserAttributes();
-      
+
       if (__DEV__) {
         console.log("User attributes fetched successfully");
       }
-      
+
       setUserData({
         nickname: attributes.nickname,
         email: attributes.email,
         sub: attributes.sub,
-        ...attributes
+        ...attributes,
       });
-      
+
       return attributes;
     } catch (error) {
       if (__DEV__) {
@@ -74,7 +79,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const session = await fetchAuthSession();
       const isAuth = session.tokens !== undefined;
       setIsAuthenticated(isAuth);
-      
+
       if (isAuth) {
         await fetchUserData();
       }
@@ -91,18 +96,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const handleSignIn = async (username: string, password: string) => {
     try {
       if (__DEV__) {
-        console.log(`Attempting to sign in user on ${Platform.OS}: ${username}`);
+        console.log(
+          `Attempting to sign in user on ${Platform.OS}: ${username}`
+        );
       }
-      
+
       const signInResult = await signIn({
         username,
         password,
+        options: {
+          authFlowType: "USER_PASSWORD_AUTH",
+        },
       });
-      
+
       if (__DEV__) {
         console.log("Sign in result:", JSON.stringify(signInResult));
       }
-      
+
       if (signInResult.nextStep.signInStep === "DONE") {
         setIsAuthenticated(true);
         await fetchUserData();
@@ -123,11 +133,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (__DEV__) {
         console.log("Signing out user");
       }
-      
+
       await signOut();
       setIsAuthenticated(false);
       setUserData(null);
-      
+
       if (__DEV__) {
         console.log("User signed out successfully");
       }
