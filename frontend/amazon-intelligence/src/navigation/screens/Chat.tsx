@@ -1,11 +1,12 @@
 import React, { useRef, useEffect } from "react";
-import { StyleSheet, ScrollView, View, ActivityIndicator } from "react-native";
-import { Text, useTheme, MD3Theme } from "react-native-paper";
+import { StyleSheet, ScrollView, View, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
+import { Text, useTheme, MD3Theme, Button } from "react-native-paper";
 import { useChat } from "../../context/ChatContext";
 import { MessageBubble } from "../../components";
+import ChatMicrophone from "../../components/ChatMicrophone";
 
 export function Chat() {
-  const { messages, isLoading } = useChat();
+  const { messages, isLoading, clearMessages, conversationId } = useChat();
   const theme = useTheme();
   const styles = createStyles(theme);
   const scrollViewRef = useRef<ScrollView>(null);
@@ -14,44 +15,87 @@ export function Chat() {
     if (scrollViewRef.current && messages.length > 0) {
       // Use setTimeout to ensure the render completes before scrolling
       setTimeout(() => {
-        scrollViewRef.current?.scrollToEnd({ animated: false });
+        scrollViewRef.current?.scrollToEnd({ animated: true });
       }, 100);
     }
   }, [messages]);
 
   return (
-    <ScrollView
-      ref={scrollViewRef}
-      style={styles.scrollView}
-      contentContainerStyle={styles.scrollViewContent}
-      showsVerticalScrollIndicator={true}
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 88 : 0}
     >
-      {/* Render all messages */}
-      {messages.map((message) => (
-        <MessageBubble
-          key={message.id}
-          isUser={message.isUser}
-          message={message.imageUri ? undefined : message.content}
-          imageUri={message.imageUri}
-        />
-      ))}
+      <View style={styles.header}>
+        <Text style={styles.conversationId}>Conversation ID: {conversationId.substring(0, 8)}...</Text>
+        <Button 
+          mode="text" 
+          onPress={clearMessages} 
+          compact
+          icon="delete"
+        >
+          Clear
+        </Button>
+      </View>
+      
+      <ScrollView
+        ref={scrollViewRef}
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollViewContent}
+        showsVerticalScrollIndicator={true}
+      >
+        {messages.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>Start a conversation by speaking or taking a photo</Text>
+          </View>
+        ) : (
+          /* Render all messages */
+          messages.map((message) => (
+            <MessageBubble
+              key={message.id}
+              isUser={message.isUser}
+              message={message.imageUri ? undefined : message.content}
+              imageUri={message.imageUri}
+            />
+          ))
+        )}
 
-      {/* Loading indicator */}
-      {isLoading && (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator color={theme.colors.primary} size="large" />
-          <Text style={styles.loadingText}>Processing your message...</Text>
-        </View>
-      )}
-    </ScrollView>
+        {/* Loading indicator */}
+        {isLoading && (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator color={theme.colors.primary} size="large" />
+            <Text style={styles.loadingText}>Processing your message...</Text>
+          </View>
+        )}
+      </ScrollView>
+      
+      {/* Chat input area with microphone */}
+      <ChatMicrophone />
+    </KeyboardAvoidingView>
   );
 }
 
 const createStyles = (theme: MD3Theme) =>
   StyleSheet.create({
-    scrollView: {
+    container: {
       flex: 1,
       backgroundColor: theme.colors.background,
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.surfaceVariant,
+    },
+    conversationId: {
+      fontSize: 12,
+      color: theme.colors.outline,
+    },
+    scrollView: {
+      flex: 1,
     },
     scrollViewContent: {
       paddingVertical: 16,
@@ -65,5 +109,16 @@ const createStyles = (theme: MD3Theme) =>
     loadingText: {
       marginTop: 8,
       color: theme.colors.primary,
+    },
+    emptyContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 20,
+      opacity: 0.6,
+    },
+    emptyText: {
+      textAlign: 'center',
+      color: theme.colors.outline,
     },
   });
