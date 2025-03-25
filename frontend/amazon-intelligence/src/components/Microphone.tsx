@@ -7,10 +7,12 @@ import {
   ExpoSpeechRecognitionModule,
   useSpeechRecognitionEvent,
 } from "expo-speech-recognition";
+import { useNavigation } from "@react-navigation/native";
 
 const Microphone = () => {
   const theme = useTheme();
   const styles = createStyles(theme);
+  const navigation = useNavigation();
   const {
     interimTranscription,
     setInterimTranscription,
@@ -20,9 +22,11 @@ const Microphone = () => {
 
   const [recording, setRecording] = useState<boolean>(false);
   const [permission, setPermission] = useState<boolean | null>(null);
+  const [hasFinishedRecording, setHasFinishedRecording] = useState<boolean>(false);
 
   useSpeechRecognitionEvent("start", () => {
     setRecording(true);
+    setHasFinishedRecording(false);
   });
 
   useSpeechRecognitionEvent("end", () => {
@@ -30,6 +34,7 @@ const Microphone = () => {
     // When recording stops, set the final transcription
     if (interimTranscription && interimTranscription.trim()) {
       setFinalTranscription(interimTranscription);
+      setHasFinishedRecording(true);
     }
   });
 
@@ -50,6 +55,19 @@ const Microphone = () => {
   useEffect(() => {
     checkPermission();
   }, []);
+
+  // Navigate to Chat screen after recording is finished and transcription is set
+  useEffect(() => {
+    if (hasFinishedRecording && interimTranscription && interimTranscription.trim()) {
+      // Short delay to ensure the transcription is processed before navigation
+      const timer = setTimeout(() => {
+        navigation.navigate('Chat');
+        setHasFinishedRecording(false);
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [hasFinishedRecording, interimTranscription, navigation]);
 
   const checkPermission = async (): Promise<void> => {
     try {
