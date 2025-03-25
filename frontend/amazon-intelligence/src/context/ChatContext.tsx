@@ -6,9 +6,16 @@ import React, {
   useEffect,
 } from "react";
 import axios from "axios";
+import amplifyConfig from "../../amplify-config";
+import { v4 as uuidv4 } from 'uuid';
 
-const API_ENDPOINT =
-  "https://your-api-id.execute-api.region.amazonaws.com/stage/";
+const API_ENDPOINT = amplifyConfig.API.REST.API.endpoint;
+
+type Location = {
+  latitude: number;
+  longitude: number;
+  name: string;
+};
 
 type Message = {
   id: string;
@@ -30,20 +37,28 @@ type ChatContextType = {
   messages: Message[];
   clearMessages: () => void;
   isLoading: boolean;
+  conversationId: string;
+  location: Location | null;
+  setLocation: (location: Location | null) => void;
 };
 
 const ChatContext = createContext<ChatContextType | null>(null);
 
+// Default location - Seattle, WA
+const DEFAULT_LOCATION: Location = {
+  latitude: 47.6062,
+  longitude: -122.3321,
+  name: "Seattle, WA"
+};
+
 export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [imageUri, setImageUri] = useState<string | null>(null);
-  const [interimTranscription, setInterimTranscription] = useState<
-    string | null
-  >(null);
-  const [finalTranscription, setFinalTranscription] = useState<string | null>(
-    null
-  );
+  const [interimTranscription, setInterimTranscription] = useState<string | null>(null);
+  const [finalTranscription, setFinalTranscription] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [conversationId, setConversationId] = useState<string>(uuidv4());
+  const [location, setLocation] = useState<Location | null>(DEFAULT_LOCATION);
 
   const clearImage = () => {
     setImageUri(null);
@@ -56,6 +71,14 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
 
   const clearMessages = () => {
     setMessages([]);
+    // Generate a new conversation ID when clearing messages
+    setConversationId(uuidv4());
+  };
+
+  // Get current datetime in ISO format with timezone
+  const getCurrentDatetime = (): string => {
+    const now = new Date();
+    return now.toISOString();
   };
 
   useEffect(() => {
@@ -73,9 +96,21 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
 
           setMessages((prev) => [...prev, userMessage]);
 
-          const response = await axios.post(`${API_ENDPOINT}chat`, {
+          // Prepare the request payload according to the specified format
+          const payload = {
             input: finalTranscription,
-          });
+            conversationId: conversationId,
+            context: {
+              location: location || DEFAULT_LOCATION,
+              datetime: getCurrentDatetime()
+            }
+          };
+
+          if (__DEV__) {
+            console.log("Sending to API:", JSON.stringify(payload, null, 2));
+          }
+
+          const response = await axios.post(`${API_ENDPOINT}chat`, payload);
 
           if (response.data && response.data.message) {
             const aiMessage: Message = {
@@ -107,7 +142,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     };
 
     processTranscription();
-  }, [finalTranscription]);
+  }, [finalTranscription, conversationId, location]);
 
   useEffect(() => {
     if (imageUri) {
@@ -137,6 +172,9 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         messages,
         clearMessages,
         isLoading,
+        conversationId,
+        location,
+        setLocation,
       }}
     >
       {children}
