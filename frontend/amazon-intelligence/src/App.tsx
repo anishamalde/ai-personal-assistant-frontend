@@ -7,6 +7,7 @@ import {
 import * as SplashScreen from "expo-splash-screen";
 import { ChatProvider } from "./context/ChatContext";
 import { AuthProvider } from "./context/AuthContext";
+import { PreferencesProvider } from "./context/PreferencesContext";
 import { Amplify } from "aws-amplify";
 import amplifyConfig from "../amplify-config";
 import { LogBox } from "react-native";
@@ -42,20 +43,22 @@ export function App() {
   return (
     <PaperProvider theme={theme}>
       <AuthProvider>
-        <ChatProvider>
-          <LocationPermission />
-          <Navigation
-            linking={{
-              enabled: "auto",
-              prefixes: [
-                "amazonintelligence://", // Match the scheme in app.json
-              ],
-            }}
-            onReady={() => {
-              SplashScreen.hideAsync();
-            }}
-          />
-        </ChatProvider>
+        <PreferencesProvider>
+          <ChatProvider>
+            <LocationPermission />
+            <Navigation
+              linking={{
+                enabled: "auto",
+                prefixes: [
+                  "amazonintelligence://", // Match the scheme in app.json
+                ],
+              }}
+              onReady={() => {
+                SplashScreen.hideAsync();
+              }}
+            />
+          </ChatProvider>
+        </PreferencesProvider>
       </AuthProvider>
     </PaperProvider>
   );

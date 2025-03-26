@@ -1,16 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Card, Text, RadioButton, Divider, MD3Theme, useTheme, Menu, Button } from 'react-native-paper';
-
-type TemperatureUnit = 'celsius' | 'fahrenheit';
-type GeneralUnits = 'metric' | 'imperial';
-type VoiceId = 'Joanna' | 'Matthew' | 'Salli' | 'Kimberly' | 'Amy' | 'Brian' | 'Emma' | 'Russell';
-
-interface Preferences {
-  temperatureUnit: TemperatureUnit;
-  generalUnits: GeneralUnits;
-  aiVoice: VoiceId;
-}
+import { usePreferences } from '../context/PreferencesContext';
 
 // List of common Amazon Polly voices with their display names
 const voiceOptions = [
@@ -27,24 +18,10 @@ const voiceOptions = [
 const PreferencesForm = () => {
   const theme = useTheme();
   const styles = createStyles(theme);
-  
-  // Local state for form values
-  const [preferences, setPreferences] = useState<Preferences>({
-    temperatureUnit: 'celsius',
-    generalUnits: 'metric',
-    aiVoice: 'Joanna'
-  });
+  const { preferences, updatePreference } = usePreferences();
   
   // State for menu visibility
-  const [menuVisible, setMenuVisible] = useState(false);
-
-  // Update a single preference field
-  const updatePreference = (field: keyof Preferences, value: string) => {
-    setPreferences(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
+  const [menuVisible, setMenuVisible] = React.useState(false);
 
   // Get the label for the currently selected voice
   const getSelectedVoiceLabel = () => {
@@ -92,7 +69,7 @@ const PreferencesForm = () => {
           <RadioButton.Group
             value={preferences.temperatureUnit}
             onValueChange={(value) => 
-              updatePreference('temperatureUnit', value as TemperatureUnit)
+              updatePreference('temperatureUnit', value)
             }
           >
             <View style={styles.radioOption}>
@@ -111,7 +88,7 @@ const PreferencesForm = () => {
           <RadioButton.Group
             value={preferences.generalUnits}
             onValueChange={(value) => 
-              updatePreference('generalUnits', value as GeneralUnits)
+              updatePreference('generalUnits', value)
             }
           >
             <View style={styles.radioOption}>
