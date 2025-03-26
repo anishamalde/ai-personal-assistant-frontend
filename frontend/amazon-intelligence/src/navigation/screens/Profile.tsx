@@ -1,7 +1,8 @@
 import React from "react";
 import { StyleSheet, View, ScrollView } from "react-native";
-import { Text, Card, MD3Theme, useTheme, Button } from "react-native-paper";
+import { Text, Card, MD3Theme, useTheme, Button, Divider } from "react-native-paper";
 import { useAuth } from "../../context/AuthContext";
+import PreferencesForm from "../../components/PreferencesForm";
 
 export function Profile() {
   const { userData, signOut } = useAuth();
@@ -39,6 +40,16 @@ export function Profile() {
           </Card.Content>
         </Card>
 
+        <Divider style={styles.divider} />
+        
+        <Text style={styles.sectionHeader}>Preferences</Text>
+        <Text style={styles.description}>
+          Customize your experience with these settings.
+          Changes will be applied to future conversations.
+        </Text>
+        
+        <PreferencesForm />
+
         <Button 
           mode="contained" 
           onPress={handleLogout}
@@ -68,8 +79,18 @@ const createStyles = (theme: MD3Theme) =>
       marginBottom: 20,
       color: theme.colors.primary,
     },
+    sectionHeader: {
+      fontSize: 20,
+      fontWeight: "bold",
+      marginBottom: 8,
+      color: theme.colors.primary,
+    },
+    description: {
+      marginBottom: 16,
+      color: theme.colors.onSurfaceVariant,
+    },
     card: {
-      marginBottom: 24,
+      marginBottom: 16,
       elevation: 2,
     },
     cardTitle: {
@@ -80,8 +101,11 @@ const createStyles = (theme: MD3Theme) =>
       marginTop: 8,
       color: theme.colors.outline,
     },
+    divider: {
+      marginVertical: 16,
+    },
     logoutButton: {
-      marginTop: 8,
+      marginTop: 16,
       paddingVertical: 6,
     },
   });
