@@ -8,6 +8,8 @@ import React, {
 import axios from "axios";
 import amplifyConfig from "../../amplify-config";
 import { v4 as uuidv4 } from 'uuid';
+import { usePreferences } from "./PreferencesContext";
+import { useAuth } from "./AuthContext";
 
 const API_ENDPOINT = amplifyConfig.API.REST.API.endpoint;
 
@@ -59,6 +61,8 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string>(uuidv4());
   const [location, setLocation] = useState<Location | null>(DEFAULT_LOCATION);
+  const { preferences } = usePreferences();
+  const { userData } = useAuth();
 
   const clearImage = () => {
     setImageUri(null);
@@ -102,7 +106,13 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
             conversationId: conversationId,
             context: {
               location: location || DEFAULT_LOCATION,
-              datetime: getCurrentDatetime()
+              datetime: getCurrentDatetime(),
+              preferences: {
+                temperatureUnit: preferences.temperatureUnit,
+                generalUnits: preferences.generalUnits,
+                aiVoice: preferences.aiVoice,
+                userName: userData?.nickname || "User"
+              }
             }
           };
 
@@ -142,7 +152,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     };
 
     processTranscription();
-  }, [finalTranscription, conversationId, location]);
+  }, [finalTranscription, conversationId, location, preferences, userData]);
 
   useEffect(() => {
     if (imageUri) {

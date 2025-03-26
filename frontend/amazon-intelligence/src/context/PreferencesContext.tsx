@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from './AuthContext';
 
 // Define types for our preferences
 type TemperatureUnit = 'celsius' | 'fahrenheit';
@@ -19,8 +20,8 @@ const defaultPreferences: Preferences = {
   aiVoice: 'Joanna'
 };
 
-// Storage key
-const PREFERENCES_STORAGE_KEY = 'app_preferences';
+// Get storage key for current user
+const getPreferencesKey = (userId: string) => `app_preferences_${userId}`;
 
 // Context interface
 interface PreferencesContextType {
@@ -37,12 +38,17 @@ const PreferencesContext = createContext<PreferencesContextType | undefined>(und
 export const PreferencesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [preferences, setPreferences] = useState<Preferences>(defaultPreferences);
   const [isLoading, setIsLoading] = useState(true);
+  const { userData, isAuthenticated } = useAuth();
+  
+  // Get user-specific storage key
+  const userId = userData?.sub || 'guest';
+  const storageKey = getPreferencesKey(userId);
 
   // Load preferences from storage on mount
   useEffect(() => {
     const loadPreferences = async () => {
       try {
-        const storedPreferences = await AsyncStorage.getItem(PREFERENCES_STORAGE_KEY);
+        const storedPreferences = await AsyncStorage.getItem(storageKey);
         
         if (storedPreferences) {
           setPreferences(JSON.parse(storedPreferences));
@@ -54,24 +60,29 @@ export const PreferencesProvider: React.FC<{ children: React.ReactNode }> = ({ c
       }
     };
 
-    loadPreferences();
-  }, []);
+    if (isAuthenticated) {
+      loadPreferences();
+    } else {
+      setPreferences(defaultPreferences);
+      setIsLoading(false);
+    }
+  }, [storageKey, isAuthenticated]);
 
   // Save preferences to storage whenever they change
   useEffect(() => {
     const savePreferences = async () => {
       try {
-        await AsyncStorage.setItem(PREFERENCES_STORAGE_KEY, JSON.stringify(preferences));
+        await AsyncStorage.setItem(storageKey, JSON.stringify(preferences));
       } catch (error) {
         console.error('Failed to save preferences:', error);
       }
     };
 
-    // Don't save during initial load
-    if (!isLoading) {
+    // Don't save during initial load or if not authenticated
+    if (!isLoading && isAuthenticated) {
       savePreferences();
     }
-  }, [preferences, isLoading]);
+  }, [preferences, isLoading, storageKey, isAuthenticated]);
 
   // Update a single preference
   const updatePreference = <K extends keyof Preferences>(key: K, value: Preferences[K]) => {
