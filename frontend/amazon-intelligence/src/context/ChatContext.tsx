@@ -7,7 +7,9 @@ import React, {
 } from "react";
 import axios from "axios";
 import amplifyConfig from "../../amplify-config";
-import { v4 as uuidv4 } from 'uuid';
+import "react-native-get-random-values";
+import { v4 as uuidv4 } from "uuid";
+import { usePermissions } from "./PermissionsContext";
 
 const API_ENDPOINT = amplifyConfig.API.REST.API.endpoint;
 
@@ -38,8 +40,6 @@ type ChatContextType = {
   clearMessages: () => void;
   isLoading: boolean;
   conversationId: string;
-  location: Location | null;
-  setLocation: (location: Location | null) => void;
 };
 
 const ChatContext = createContext<ChatContextType | null>(null);
@@ -48,17 +48,26 @@ const ChatContext = createContext<ChatContextType | null>(null);
 const DEFAULT_LOCATION: Location = {
   latitude: 47.6062,
   longitude: -122.3321,
-  name: "Seattle, WA"
+  name: "Seattle, WA",
 };
 
 export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [imageUri, setImageUri] = useState<string | null>(null);
-  const [interimTranscription, setInterimTranscription] = useState<string | null>(null);
-  const [finalTranscription, setFinalTranscription] = useState<string | null>(null);
+  const [interimTranscription, setInterimTranscription] = useState<
+    string | null
+  >(null);
+  const [finalTranscription, setFinalTranscription] = useState<string | null>(
+    null
+  );
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [conversationId, setConversationId] = useState<string>(uuidv4());
-  const [location, setLocation] = useState<Location | null>(DEFAULT_LOCATION);
+  const uuid = uuidv4();
+  const [conversationId, setConversationId] = useState<string>(uuid);
+
+  // Get location from permissions context
+  const { location } = usePermissions();
+
+  console.log(conversationId);
 
   const clearImage = () => {
     setImageUri(null);
@@ -102,8 +111,8 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
             conversationId: conversationId,
             context: {
               location: location || DEFAULT_LOCATION,
-              datetime: getCurrentDatetime()
-            }
+              datetime: getCurrentDatetime(),
+            },
           };
 
           if (__DEV__) {
@@ -173,8 +182,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         clearMessages,
         isLoading,
         conversationId,
-        location,
-        setLocation,
       }}
     >
       {children}

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { View, StyleSheet, ScrollView } from "react-native";
 import { IconButton, useTheme, Text, MD3Theme } from "react-native-paper";
-import { PermissionsDialogBox, RecordingAnimation } from "./index";
+import { RecordingAnimation } from "./index";
 import { useChat } from "../context/ChatContext";
+import { usePermissions } from "../context/PermissionsContext";
 import {
   ExpoSpeechRecognitionModule,
   useSpeechRecognitionEvent,
@@ -20,9 +21,12 @@ const Microphone = () => {
     clearTranscriptions,
   } = useChat();
 
+  const { microphonePermission, requestMicrophonePermission } =
+    usePermissions();
+
   const [recording, setRecording] = useState<boolean>(false);
-  const [permission, setPermission] = useState<boolean | null>(null);
-  const [hasFinishedRecording, setHasFinishedRecording] = useState<boolean>(false);
+  const [hasFinishedRecording, setHasFinishedRecording] =
+    useState<boolean>(false);
 
   useSpeechRecognitionEvent("start", () => {
     setRecording(true);
@@ -52,43 +56,32 @@ const Microphone = () => {
     );
   });
 
-  useEffect(() => {
-    checkPermission();
-  }, []);
-
   // Navigate to Chat screen after recording is finished and transcription is set
   useEffect(() => {
-    if (hasFinishedRecording && interimTranscription && interimTranscription.trim()) {
+    if (
+      hasFinishedRecording &&
+      interimTranscription &&
+      interimTranscription.trim()
+    ) {
       // Short delay to ensure the transcription is processed before navigation
       const timer = setTimeout(() => {
-        navigation.navigate('Chat');
+        navigation.navigate("Chat");
         setHasFinishedRecording(false);
       }, 500);
-      
+
       return () => clearTimeout(timer);
     }
   }, [hasFinishedRecording, interimTranscription, navigation]);
 
-  const checkPermission = async (): Promise<void> => {
-    try {
-      const result =
-        await ExpoSpeechRecognitionModule.requestPermissionsAsync();
-      setPermission(result.granted);
-    } catch (error) {
-      console.error("Failed to check speech permission:", error);
-      setPermission(false);
-    }
-  };
-
   const handleMicPress = async (): Promise<void> => {
-    if (permission === true) {
+    if (microphonePermission === true) {
       if (!recording) {
         await startSpeechRecognition();
       } else {
         await stopSpeechRecognition();
       }
     } else {
-      await checkPermission();
+      await requestMicrophonePermission();
     }
   };
 
@@ -118,12 +111,6 @@ const Microphone = () => {
 
   return (
     <View style={styles.container}>
-      {permission === false && (
-        <PermissionsDialogBox
-          message="We need your permission to access the microphone for speech recognition"
-          requestPermission={checkPermission}
-        />
-      )}
       <IconButton
         icon="microphone"
         size={80}
@@ -161,5 +148,8 @@ const createStyles = (theme: MD3Theme) =>
     },
     statusText: {
       color: theme.colors.error,
+      marginBottom: 10,
+      textAlign: "center",
+      width: "80%",
     },
   });

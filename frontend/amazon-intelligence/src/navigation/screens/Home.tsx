@@ -1,13 +1,35 @@
 import React from "react";
 import { StyleSheet, View } from "react-native";
 import { MD3Theme, useTheme, Text } from "react-native-paper";
-import { Microphone } from "../../components";
+import { Microphone, PermissionsDialogBox } from "../../components";
 import { useAuth } from "../../context/AuthContext";
+import { usePermissions } from "../../context/PermissionsContext";
 
 export function Home() {
   const theme = useTheme();
   const styles = createStyles(theme);
   const { userData } = useAuth();
+
+  const {
+    locationPermission,
+    microphonePermission,
+    showPermissionsDialog,
+    requestLocationPermission,
+    requestMicrophonePermission,
+  } = usePermissions();
+
+  // Handle requesting both permissions
+  const handleRequestPermissions = async () => {
+    // Request location permission if not granted
+    if (locationPermission !== "granted") {
+      await requestLocationPermission();
+    }
+
+    // Request microphone permission if not granted
+    if (microphonePermission !== true) {
+      await requestMicrophonePermission();
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -16,6 +38,14 @@ export function Home() {
       ) : (
         <Text style={styles.welcomeText}>Welcome!</Text>
       )}
+
+      {showPermissionsDialog && (
+        <PermissionsDialogBox
+          message="This app needs to access your location & microphone. Would you like to grant access?"
+          requestPermission={handleRequestPermissions}
+        />
+      )}
+
       <Microphone />
     </View>
   );

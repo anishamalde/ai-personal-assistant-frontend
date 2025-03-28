@@ -6,17 +6,11 @@ import {
 } from "react-native-paper";
 import * as SplashScreen from "expo-splash-screen";
 import { ChatProvider } from "./context/ChatContext";
+import { PermissionsProvider } from "./context/PermissionsContext";
 import { AuthProvider } from "./context/AuthContext";
 import { Amplify } from "aws-amplify";
 import amplifyConfig from "../amplify-config";
 import { LogBox } from "react-native";
-import LocationPermission from "./components/LocationPermission";
-
-// Ignore specific warnings that might be coming from dependencies
-LogBox.ignoreLogs([
-  "AsyncStorage has been extracted from react-native",
-  "Setting a timer for a long period of time",
-]);
 
 // Configure Amplify at the app root level
 Amplify.configure(amplifyConfig);
@@ -42,20 +36,21 @@ export function App() {
   return (
     <PaperProvider theme={theme}>
       <AuthProvider>
-        <ChatProvider>
-          <LocationPermission />
-          <Navigation
-            linking={{
-              enabled: "auto",
-              prefixes: [
-                "amazonintelligence://", // Match the scheme in app.json
-              ],
-            }}
-            onReady={() => {
-              SplashScreen.hideAsync();
-            }}
-          />
-        </ChatProvider>
+        <PermissionsProvider>
+          <ChatProvider>
+            <Navigation
+              linking={{
+                enabled: "auto",
+                prefixes: [
+                  "amazonintelligence://", // Match the scheme in app.json
+                ],
+              }}
+              onReady={() => {
+                SplashScreen.hideAsync();
+              }}
+            />
+          </ChatProvider>
+        </PermissionsProvider>
       </AuthProvider>
     </PaperProvider>
   );
