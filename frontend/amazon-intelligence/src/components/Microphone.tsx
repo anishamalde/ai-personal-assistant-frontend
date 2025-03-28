@@ -37,6 +37,11 @@ const Microphone = ({
     setRecording(true);
   });
 
+  useSpeechRecognitionEvent("result", (event) => {
+    // Update the interim transcription as the user speaks
+    setInterimTranscription(event.results[0]?.transcript || "");
+  });
+
   useSpeechRecognitionEvent("end", () => {
     setRecording(false);
     // When recording stops, set the final transcription
@@ -46,14 +51,11 @@ const Microphone = ({
         onRecordingFinished(interimTranscription);
       } else {
         // Set directly for chat mode
+
         setFinalTranscription(interimTranscription);
+        console.log(interimTranscription);
       }
     }
-  });
-
-  useSpeechRecognitionEvent("result", (event) => {
-    // Update the interim transcription as the user speaks
-    setInterimTranscription(event.results[0]?.transcript || "");
   });
 
   useSpeechRecognitionEvent("error", (event) => {

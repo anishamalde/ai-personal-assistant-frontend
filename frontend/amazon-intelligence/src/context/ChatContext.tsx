@@ -67,8 +67,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   // Get location from permissions context
   const { location } = usePermissions();
 
-  console.log(conversationId);
-
   const clearImage = () => {
     setImageUri(null);
   };
