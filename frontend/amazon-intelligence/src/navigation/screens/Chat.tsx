@@ -9,8 +9,7 @@ import {
 } from "react-native";
 import { Text, useTheme, MD3Theme, Button } from "react-native-paper";
 import { useChat } from "../../context/ChatContext";
-import { MessageBubble } from "../../components";
-import ChatMicrophone from "../../components/ChatMicrophone";
+import { MessageBubble, Microphone } from "../../components";
 
 export function Chat() {
   const { messages, isLoading, clearMessages, conversationId } = useChat();
@@ -74,9 +73,7 @@ export function Chat() {
           </View>
         )}
       </ScrollView>
-
-      {/* Chat input area with microphone */}
-      <ChatMicrophone />
+      <Microphone mode="chat" />
     </KeyboardAvoidingView>
   );
 }

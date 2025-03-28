@@ -1,19 +1,25 @@
-import React, { useState, useEffect } from "react";
-import { View, StyleSheet, ScrollView } from "react-native";
-import { IconButton, useTheme, Text, MD3Theme } from "react-native-paper";
-import { RecordingAnimation } from "./index";
+import React, { useState } from "react";
+import { View, StyleSheet } from "react-native";
+import { IconButton, useTheme, MD3Theme } from "react-native-paper";
+import RecordingAnimation from "../components/RecordingAnimation";
 import { useChat } from "../context/ChatContext";
 import { usePermissions } from "../context/PermissionsContext";
 import {
   ExpoSpeechRecognitionModule,
   useSpeechRecognitionEvent,
 } from "expo-speech-recognition";
-import { useNavigation } from "@react-navigation/native";
 
-const Microphone = () => {
+interface MicrophoneProps {
+  mode?: "main" | "chat";
+  onRecordingFinished?: (transcription: string) => void;
+}
+
+const Microphone = ({
+  mode = "main",
+  onRecordingFinished,
+}: MicrophoneProps) => {
   const theme = useTheme();
   const styles = createStyles(theme);
-  const navigation = useNavigation();
   const {
     interimTranscription,
     setInterimTranscription,
@@ -25,20 +31,23 @@ const Microphone = () => {
     usePermissions();
 
   const [recording, setRecording] = useState<boolean>(false);
-  const [hasFinishedRecording, setHasFinishedRecording] =
-    useState<boolean>(false);
 
+  // Speech recognition event handlers
   useSpeechRecognitionEvent("start", () => {
     setRecording(true);
-    setHasFinishedRecording(false);
   });
 
   useSpeechRecognitionEvent("end", () => {
     setRecording(false);
     // When recording stops, set the final transcription
     if (interimTranscription && interimTranscription.trim()) {
-      setFinalTranscription(interimTranscription);
-      setHasFinishedRecording(true);
+      if (onRecordingFinished) {
+        // Use callback for main mode
+        onRecordingFinished(interimTranscription);
+      } else {
+        // Set directly for chat mode
+        setFinalTranscription(interimTranscription);
+      }
     }
   });
 
@@ -55,23 +64,6 @@ const Microphone = () => {
       event.message
     );
   });
-
-  // Navigate to Chat screen after recording is finished and transcription is set
-  useEffect(() => {
-    if (
-      hasFinishedRecording &&
-      interimTranscription &&
-      interimTranscription.trim()
-    ) {
-      // Short delay to ensure the transcription is processed before navigation
-      const timer = setTimeout(() => {
-        navigation.navigate("Chat");
-        setHasFinishedRecording(false);
-      }, 500);
-
-      return () => clearTimeout(timer);
-    }
-  }, [hasFinishedRecording, interimTranscription, navigation]);
 
   const handleMicPress = async (): Promise<void> => {
     if (microphonePermission === true) {
@@ -109,47 +101,89 @@ const Microphone = () => {
     }
   };
 
-  return (
-    <View style={styles.container}>
-      <IconButton
-        icon="microphone"
-        size={80}
-        onPress={handleMicPress}
-        iconColor={theme.colors.background}
-        containerColor={recording ? theme.colors.error : theme.colors.primary}
-      />
-      <RecordingAnimation isRecording={recording} />
-      {interimTranscription && (
-        <ScrollView style={styles.transcriptContainer}>
-          <Text variant="bodyMedium">{interimTranscription}</Text>
-        </ScrollView>
-      )}
-    </View>
-  );
+  // Render the microphone UI based on mode
+  if (mode === "main") {
+    return (
+      <View style={styles.mainContainer}>
+        <IconButton
+          icon="microphone"
+          size={80}
+          onPress={handleMicPress}
+          iconColor={theme.colors.background}
+          containerColor={recording ? theme.colors.error : theme.colors.primary}
+        />
+        <RecordingAnimation
+          isRecording={recording}
+          size="large"
+          variant="dots"
+        />
+      </View>
+    );
+  } else if (mode === "chat") {
+    return (
+      <View style={styles.chatContainer}>
+        <View style={styles.inputContainer}>
+          <IconButton
+            icon="microphone"
+            size={30}
+            onPress={handleMicPress}
+            iconColor={theme.colors.background}
+            containerColor={
+              recording ? theme.colors.error : theme.colors.primary
+            }
+            style={styles.micButton}
+          />
+          {recording && (
+            <View style={styles.recordingContainer}>
+              <RecordingAnimation
+                isRecording={recording}
+                size="small"
+                variant="pulse"
+                text={interimTranscription || "Listening..."}
+              />
+            </View>
+          )}
+        </View>
+      </View>
+    );
+  }
 };
 
 export default Microphone;
 
 const createStyles = (theme: MD3Theme) =>
   StyleSheet.create({
-    container: {
+    // Main mode styles
+    mainContainer: {
       alignItems: "center",
       justifyContent: "center",
       width: "100%",
     },
-    transcriptContainer: {
-      maxHeight: 100,
-      width: "90%",
-      margin: 20,
-      borderWidth: 1,
-      borderColor: theme.colors.primary,
-      borderRadius: 8,
-      padding: 8,
+
+    // Chat mode styles
+    chatContainer: {
+      width: "100%",
     },
-    statusText: {
-      color: theme.colors.error,
-      marginBottom: 10,
-      textAlign: "center",
-      width: "80%",
+    inputContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderTopWidth: 1,
+      borderTopColor: theme.colors.surfaceVariant,
+      backgroundColor: theme.colors.background,
+    },
+    recordingContainer: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: theme.colors.surfaceVariant,
+      borderRadius: 20,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      marginLeft: 8,
+    },
+    micButton: {
+      margin: 0,
     },
   });

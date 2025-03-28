@@ -10,15 +10,8 @@ import { PermissionsProvider } from "./context/PermissionsContext";
 import { AuthProvider } from "./context/AuthContext";
 import { Amplify } from "aws-amplify";
 import amplifyConfig from "../amplify-config";
-import { LogBox } from "react-native";
 
-// Configure Amplify at the app root level
 Amplify.configure(amplifyConfig);
-
-// Only log in development
-if (__DEV__) {
-  console.log("Amplify configured in App.tsx");
-}
 
 SplashScreen.preventAutoHideAsync();
 
