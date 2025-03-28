@@ -7,9 +7,11 @@ import React, {
 } from "react";
 import axios from "axios";
 import amplifyConfig from "../../amplify-config";
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid";
 import { usePreferences } from "./PreferencesContext";
+import { usePermissions } from "./PermissionsContext";
 import { useAuth } from "./AuthContext";
+import "react-native-get-random-values";
 
 const API_ENDPOINT = amplifyConfig.API.REST.API.endpoint;
 
@@ -40,8 +42,6 @@ type ChatContextType = {
   clearMessages: () => void;
   isLoading: boolean;
   conversationId: string;
-  location: Location | null;
-  setLocation: (location: Location | null) => void;
 };
 
 const ChatContext = createContext<ChatContextType | null>(null);
@@ -50,19 +50,23 @@ const ChatContext = createContext<ChatContextType | null>(null);
 const DEFAULT_LOCATION: Location = {
   latitude: 47.6062,
   longitude: -122.3321,
-  name: "Seattle, WA"
+  name: "Seattle, WA",
 };
 
 export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [imageUri, setImageUri] = useState<string | null>(null);
-  const [interimTranscription, setInterimTranscription] = useState<string | null>(null);
-  const [finalTranscription, setFinalTranscription] = useState<string | null>(null);
+  const [interimTranscription, setInterimTranscription] = useState<
+    string | null
+  >(null);
+  const [finalTranscription, setFinalTranscription] = useState<string | null>(
+    null
+  );
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string>(uuidv4());
-  const [location, setLocation] = useState<Location | null>(DEFAULT_LOCATION);
   const { preferences } = usePreferences();
   const { userData } = useAuth();
+  const { location } = usePermissions();
 
   const clearImage = () => {
     setImageUri(null);
@@ -111,9 +115,9 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
                 temperatureUnit: preferences.temperatureUnit,
                 generalUnits: preferences.generalUnits,
                 aiVoice: preferences.aiVoice,
-                userName: userData?.nickname || "User"
-              }
-            }
+                userName: userData?.nickname || "User",
+              },
+            },
           };
 
           if (__DEV__) {
@@ -183,8 +187,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         clearMessages,
         isLoading,
         conversationId,
-        location,
-        setLocation,
       }}
     >
       {children}

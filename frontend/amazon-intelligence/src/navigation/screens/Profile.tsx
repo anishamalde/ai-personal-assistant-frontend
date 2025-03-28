@@ -1,8 +1,15 @@
 import React from "react";
 import { StyleSheet, View, ScrollView } from "react-native";
-import { Text, Card, MD3Theme, useTheme, Button, Divider } from "react-native-paper";
+import {
+  Text,
+  Card,
+  MD3Theme,
+  useTheme,
+  Button,
+  Divider,
+} from "react-native-paper";
 import { useAuth } from "../../context/AuthContext";
-import PreferencesForm from "../../components/PreferencesForm";
+import { PreferencesForm } from "../../components";
 
 export function Profile() {
   const { userData, signOut } = useAuth();
@@ -17,21 +24,21 @@ export function Profile() {
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.container}>
         <Text style={styles.header}>Your Profile</Text>
-        
+
         <Card style={styles.card}>
           <Card.Content>
             <Text variant="titleLarge" style={styles.cardTitle}>
               {userData?.nickname || "User"}
             </Text>
-            
+
             {userData?.email && (
               <Text variant="bodyMedium">Email: {userData.email}</Text>
             )}
-            
+
             {userData?.phone_number && (
               <Text variant="bodyMedium">Phone: {userData.phone_number}</Text>
             )}
-            
+
             {userData?.sub && (
               <Text variant="bodySmall" style={styles.subText}>
                 User ID: {userData.sub}
@@ -41,17 +48,17 @@ export function Profile() {
         </Card>
 
         <Divider style={styles.divider} />
-        
+
         <Text style={styles.sectionHeader}>Preferences</Text>
         <Text style={styles.description}>
-          Customize your experience with these settings.
-          Changes will be applied to future conversations.
+          Customize your experience with these settings. Changes will be applied
+          to future conversations.
         </Text>
-        
+
         <PreferencesForm />
 
-        <Button 
-          mode="contained" 
+        <Button
+          mode="contained"
           onPress={handleLogout}
           style={styles.logoutButton}
           buttonColor={theme.colors.error}

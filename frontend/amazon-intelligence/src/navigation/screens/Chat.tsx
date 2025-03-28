@@ -1,9 +1,15 @@
 import React, { useRef, useEffect } from "react";
-import { StyleSheet, ScrollView, View, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
+import {
+  StyleSheet,
+  ScrollView,
+  View,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
 import { Text, useTheme, MD3Theme, Button } from "react-native-paper";
 import { useChat } from "../../context/ChatContext";
-import { MessageBubble } from "../../components";
-import ChatMicrophone from "../../components/ChatMicrophone";
+import { MessageBubble, Microphone } from "../../components";
 
 export function Chat() {
   const { messages, isLoading, clearMessages, conversationId } = useChat();
@@ -21,23 +27,20 @@ export function Chat() {
   }, [messages]);
 
   return (
-    <KeyboardAvoidingView 
+    <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={Platform.OS === "ios" ? 88 : 0}
     >
       <View style={styles.header}>
-        <Text style={styles.conversationId}>Conversation ID: {conversationId.substring(0, 8)}...</Text>
-        <Button 
-          mode="text" 
-          onPress={clearMessages} 
-          compact
-          icon="delete"
-        >
+        <Text style={styles.conversationId}>
+          Conversation ID: {conversationId.substring(0, 8)}...
+        </Text>
+        <Button mode="text" onPress={clearMessages} compact icon="delete">
           Clear
         </Button>
       </View>
-      
+
       <ScrollView
         ref={scrollViewRef}
         style={styles.scrollView}
@@ -46,7 +49,9 @@ export function Chat() {
       >
         {messages.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>Start a conversation by speaking or taking a photo</Text>
+            <Text style={styles.emptyText}>
+              Start a conversation by speaking or taking a photo
+            </Text>
           </View>
         ) : (
           /* Render all messages */
@@ -68,9 +73,7 @@ export function Chat() {
           </View>
         )}
       </ScrollView>
-      
-      {/* Chat input area with microphone */}
-      <ChatMicrophone />
+      <Microphone mode="chat" />
     </KeyboardAvoidingView>
   );
 }
@@ -82,9 +85,9 @@ const createStyles = (theme: MD3Theme) =>
       backgroundColor: theme.colors.background,
     },
     header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
       paddingHorizontal: 16,
       paddingVertical: 8,
       borderBottomWidth: 1,
@@ -112,13 +115,13 @@ const createStyles = (theme: MD3Theme) =>
     },
     emptyContainer: {
       flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
+      justifyContent: "center",
+      alignItems: "center",
       padding: 20,
       opacity: 0.6,
     },
     emptyText: {
-      textAlign: 'center',
+      textAlign: "center",
       color: theme.colors.outline,
     },
   });
