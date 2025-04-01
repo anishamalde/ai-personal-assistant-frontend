@@ -12,6 +12,8 @@ import { usePreferences } from "./PreferencesContext";
 import { usePermissions } from "./PermissionsContext";
 import { useAuth } from "./AuthContext";
 import "react-native-get-random-values";
+import { uploadData, getUrl } from "aws-amplify/storage";
+import { fetchAuthSession } from "aws-amplify/auth";
 
 const API_ENDPOINT = amplifyConfig.API.REST.API.endpoint;
 
@@ -27,6 +29,7 @@ type Message = {
   isUser: boolean;
   timestamp: Date;
   imageUri?: string;
+  s3ImageUrl?: string;
 };
 
 type ChatContextType = {
@@ -46,7 +49,6 @@ type ChatContextType = {
 
 const ChatContext = createContext<ChatContextType | null>(null);
 
-// Default location - Seattle, WA
 const DEFAULT_LOCATION: Location = {
   latitude: 47.6062,
   longitude: -122.3321,
@@ -89,6 +91,54 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     return now.toISOString();
   };
 
+  // Function to upload image to S3
+  const uploadImageToS3 = async (uri: string): Promise<string | null> => {
+    try {
+      // Convert image URI to blob
+      const response = await fetch(uri);
+      const blob = await response.blob();
+
+      const { identityId } = await fetchAuthSession();
+
+      // Create a filename with conversation ID and timestamp
+      const fileName = `images/${conversationId}/${Date.now()}.jpg`;
+      const s3PrivatePath = `private/${identityId}/${fileName}`;
+
+      // Upload to S3 with private access level
+      const uploadResult = await uploadData({
+        key: fileName,
+        data: blob,
+        options: {
+          accessLevel: "private",
+          contentType: "image/jpeg",
+        },
+      }).result;
+
+      console.log("Image upload successful:", uploadResult);
+
+      // Get a temporary URL for the uploaded image
+      const { url } = await getUrl({
+        key: fileName,
+        options: {
+          accessLevel: "private",
+          expiresIn: 3600, // URL expires in 1 hour
+        },
+      });
+
+      // Generate the full S3 URL for API usage
+      const bucket = amplifyConfig.Storage.S3.bucket || "";
+      const region = amplifyConfig.Storage.S3.region || "us-west-2";
+      const fullS3Url = `https://${bucket}.s3.${region}.amazonaws.com/${s3PrivatePath}`;
+
+      console.log(fullS3Url);
+
+      return fullS3Url;
+    } catch (error) {
+      console.error("Error uploading image to S3:", error);
+      return null;
+    }
+  };
+
   useEffect(() => {
     const processTranscription = async () => {
       if (finalTranscription) {
@@ -119,10 +169,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
               },
             },
           };
-
-          if (__DEV__) {
-            console.log("Sending to API:", JSON.stringify(payload, null, 2));
-          }
 
           const response = await axios.post(`${API_ENDPOINT}chat`, payload);
 
@@ -159,17 +205,85 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   }, [finalTranscription, conversationId, location, preferences, userData]);
 
   useEffect(() => {
-    if (imageUri) {
-      const imageMessage: Message = {
-        id: Date.now().toString(),
-        content: "",
-        isUser: true,
-        timestamp: new Date(),
-        imageUri: imageUri,
-      };
+    const processImageUpload = async () => {
+      if (imageUri) {
+        try {
+          setIsLoading(true);
 
-      setMessages((prev) => [...prev, imageMessage]);
-    }
+          // Create a temporary message showing the local image first
+          const imageMessage: Message = {
+            id: Date.now().toString(),
+            content: "",
+            isUser: true,
+            timestamp: new Date(),
+            imageUri: imageUri,
+          };
+
+          setMessages((prev) => [...prev, imageMessage]);
+
+          // Upload image to S3
+          const s3ImageUrl = await uploadImageToS3(imageUri);
+
+          console.log(s3ImageUrl);
+
+          if (s3ImageUrl) {
+            // Update the message with the S3 URL
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === imageMessage.id
+                  ? { ...msg, s3ImageUrl: s3ImageUrl }
+                  : msg
+              )
+            );
+
+            // Now send the message to the API with the S3 image URL
+            const payload = {
+              input: "Describe this image.",
+              conversationId: conversationId,
+              imagePath: s3ImageUrl,
+              context: {
+                location: location || DEFAULT_LOCATION,
+                datetime: getCurrentDatetime(),
+                preferences: {
+                  temperatureUnit: preferences.temperatureUnit,
+                  generalUnits: preferences.generalUnits,
+                  aiVoice: preferences.aiVoice,
+                  userName: userData?.nickname || "User",
+                },
+              },
+            };
+
+            const response = await axios.post(`${API_ENDPOINT}chat`, payload);
+
+            if (response.data && response.data.message) {
+              const aiMessage: Message = {
+                id: (Date.now() + 1).toString(),
+                content: response.data.message,
+                isUser: false,
+                timestamp: new Date(),
+              };
+
+              setMessages((prev) => [...prev, aiMessage]);
+            }
+          }
+        } catch (error) {
+          console.error("Error processing image:", error);
+
+          const errorMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            content: "Sorry, I couldn't process your image.",
+            isUser: false,
+            timestamp: new Date(),
+          };
+
+          setMessages((prev) => [...prev, errorMessage]);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    processImageUpload();
   }, [imageUri]);
 
   return (

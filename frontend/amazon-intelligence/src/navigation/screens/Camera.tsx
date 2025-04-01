@@ -60,11 +60,15 @@ export function Camera() {
 
   const renderPicture = () => {
     return (
-      <Card>
-        <Card.Cover source={{ uri: imageUri }} />
-        <Card.Actions>
-          <Button onPress={handleRetake}>Retake</Button>
-          <Button onPress={navigateToChat}>Looks Good</Button>
+      <Card style={styles.pictureContainer}>
+        <Card.Cover style={styles.picture} source={{ uri: imageUri }} />
+        <Card.Actions style={styles.pictureActions}>
+          <Button style={styles.button} onPress={handleRetake}>
+            Retake
+          </Button>
+          <Button style={styles.button} onPress={navigateToChat}>
+            Analyse
+          </Button>
         </Card.Actions>
       </Card>
     );
@@ -141,5 +145,18 @@ const styles = StyleSheet.create({
   },
   bottomLeftPlaceholder: {
     width: 40,
+  },
+  pictureContainer: {
+    height: "90%",
+    width: "90%",
+  },
+  picture: {
+    height: "85%",
+  },
+  pictureActions: {
+    height: "15%",
+  },
+  button: {
+    width: "48%",
   },
 });
