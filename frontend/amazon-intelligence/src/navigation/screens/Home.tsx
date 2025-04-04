@@ -12,7 +12,12 @@ export function Home() {
   const styles = createStyles(theme);
   const navigation = useNavigation();
   const { userData } = useAuth();
-  const { interimTranscription, setFinalTranscription } = useChat();
+  const {
+    interimTranscription,
+    setFinalTranscription,
+    hasFinishedRecording,
+    setHasFinishedRecording,
+  } = useChat();
 
   const {
     locationPermission,
@@ -21,10 +26,6 @@ export function Home() {
     requestLocationPermission,
     requestMicrophonePermission,
   } = usePermissions();
-
-  // Track if recording is finished
-  const [hasFinishedRecording, setHasFinishedRecording] =
-    useState<boolean>(false);
 
   // Handle requesting both permissions
   const handleRequestPermissions = async () => {
@@ -37,12 +38,6 @@ export function Home() {
     if (microphonePermission !== true) {
       await requestMicrophonePermission();
     }
-  };
-
-  // Handle when recording is finished
-  const handleFinishRecording = (transcription: string) => {
-    setFinalTranscription(transcription);
-    setHasFinishedRecording(true);
   };
 
   // Navigate to Chat screen after recording is finished and transcription is set
@@ -72,7 +67,7 @@ export function Home() {
           requestPermission={handleRequestPermissions}
         />
       )}
-      <Microphone mode="main" onRecordingFinished={handleFinishRecording} />
+      <Microphone mode="main" />
       {interimTranscription && (
         <ScrollView style={styles.transcriptContainer}>
           <Text variant="bodyMedium">{interimTranscription}</Text>

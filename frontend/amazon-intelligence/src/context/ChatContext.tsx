@@ -45,6 +45,8 @@ type ChatContextType = {
   clearMessages: () => void;
   isLoading: boolean;
   conversationId: string;
+  hasFinishedRecording: boolean;
+  setHasFinishedRecording: (hasFinished: boolean) => void;
 };
 
 const ChatContext = createContext<ChatContextType | null>(null);
@@ -66,6 +68,8 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string>(uuidv4());
+  const [hasFinishedRecording, setHasFinishedRecording] =
+    useState<boolean>(false);
   const { preferences } = usePreferences();
   const { userData } = useAuth();
   const { location } = usePermissions();
@@ -301,6 +305,8 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         clearMessages,
         isLoading,
         conversationId,
+        hasFinishedRecording,
+        setHasFinishedRecording,
       }}
     >
       {children}

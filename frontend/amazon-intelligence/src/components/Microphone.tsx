@@ -11,13 +11,9 @@ import {
 
 interface MicrophoneProps {
   mode?: "main" | "chat";
-  onRecordingFinished?: (transcription: string) => void;
 }
 
-const Microphone = ({
-  mode = "main",
-  onRecordingFinished,
-}: MicrophoneProps) => {
+const Microphone = ({ mode = "main" }: MicrophoneProps) => {
   const theme = useTheme();
   const styles = createStyles(theme);
   const {
@@ -25,6 +21,7 @@ const Microphone = ({
     setInterimTranscription,
     setFinalTranscription,
     clearTranscriptions,
+    setHasFinishedRecording,
   } = useChat();
 
   const { microphonePermission, requestMicrophonePermission } =
@@ -39,23 +36,16 @@ const Microphone = ({
 
   useSpeechRecognitionEvent("result", (event) => {
     // Update the interim transcription as the user speaks
-    setInterimTranscription(event.results[0]?.transcript || "");
+    const transcription = event.results[0]?.transcript;
+    setInterimTranscription(transcription || "");
+    if (event.isFinal) {
+      setFinalTranscription(transcription || "");
+      setHasFinishedRecording(true);
+    }
   });
 
   useSpeechRecognitionEvent("end", () => {
     setRecording(false);
-    // When recording stops, set the final transcription
-    if (interimTranscription && interimTranscription.trim()) {
-      if (onRecordingFinished) {
-        // Use callback for main mode
-        onRecordingFinished(interimTranscription);
-      } else {
-        // Set directly for chat mode
-
-        setFinalTranscription(interimTranscription);
-        console.log(interimTranscription);
-      }
-    }
   });
 
   useSpeechRecognitionEvent("error", (event) => {
