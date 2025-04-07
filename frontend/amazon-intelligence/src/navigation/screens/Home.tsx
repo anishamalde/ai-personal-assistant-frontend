@@ -14,7 +14,6 @@ export function Home() {
   const { userData } = useAuth();
   const {
     interimTranscription,
-    setFinalTranscription,
     hasFinishedRecording,
     setHasFinishedRecording,
   } = useChat();

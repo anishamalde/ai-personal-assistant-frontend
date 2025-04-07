@@ -1,6 +1,7 @@
 import { Amplify } from 'aws-amplify';
 
 // Configuration using Expo's environment variables with fallbacks for development
+
 const amplifyConfig = {
   Auth: {
     Cognito: {
@@ -22,7 +23,34 @@ const amplifyConfig = {
         endpoint: process.env.EXPO_PUBLIC_API_ENDPOINT || 'https://your-api-id.execute-api.region.amazonaws.com/stage/'
       }
     }
-  }
+  },
+  Predictions: {
+    convert: {
+      translateText: {
+        region: 'us-east-1',
+        proxy: false,
+        defaults: {
+          sourceLanguage: 'en',
+          targetLanguage: 'zh'
+        }
+      },
+      speechGenerator: {
+        region: 'us-east-1',
+        proxy: false,
+        defaults: {
+          VoiceId: 'Ivy',
+          LanguageCode: 'en-US'
+        }
+      },
+      transcription: {
+        region: 'us-east-1',
+        proxy: false,
+        defaults: {
+          language: 'en-US'
+        }
+      }
+    },
+    }
 };
 
 // For development only - remove in production

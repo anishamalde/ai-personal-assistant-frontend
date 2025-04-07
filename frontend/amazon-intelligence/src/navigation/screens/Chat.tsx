@@ -10,21 +10,37 @@ import {
 import { Text, useTheme, MD3Theme, Button } from "react-native-paper";
 import { useChat } from "../../context/ChatContext";
 import { MessageBubble, Microphone } from "../../components";
+import usePollyVoice from "../../hooks/usePollyVoice";
 
 export function Chat() {
   const { messages, isLoading, clearMessages, conversationId } = useChat();
   const theme = useTheme();
   const styles = createStyles(theme);
-  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollViewRef = useRef(null);
+  const prevMessageCountRef = useRef(0);
+
+  // Use the Polly hook
+  const { speak } = usePollyVoice();
 
   useEffect(() => {
+    // Handle scrolling
     if (scrollViewRef.current && messages.length > 0) {
-      // Use setTimeout to ensure the render completes before scrolling
       setTimeout(() => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
       }, 100);
     }
-  }, [messages]);
+
+    // Only speak when a new message is added (not on first render or every update)
+    if (messages.length > prevMessageCountRef.current && !isLoading) {
+      const latestMessage = messages[messages.length - 1];
+      if (latestMessage && !latestMessage.isUser && !latestMessage.imageUri) {
+        speak(latestMessage.content);
+      }
+    }
+
+    // Update the message count for next check
+    prevMessageCountRef.current = messages.length;
+  }, [messages, isLoading, speak]);
 
   return (
     <KeyboardAvoidingView
@@ -36,7 +52,15 @@ export function Chat() {
         <Text style={styles.conversationId}>
           Conversation ID: {conversationId.substring(0, 8)}...
         </Text>
-        <Button mode="text" onPress={clearMessages} compact icon="delete">
+        <Button
+          mode="text"
+          onPress={() => {
+            clearMessages();
+            prevMessageCountRef.current = 0;
+          }}
+          compact
+          icon="delete"
+        >
           Clear
         </Button>
       </View>
@@ -56,12 +80,13 @@ export function Chat() {
         ) : (
           /* Render all messages */
           messages.map((message) => (
-            <MessageBubble
-              key={message.id}
-              isUser={message.isUser}
-              message={message.imageUri ? undefined : message.content}
-              imageUri={message.imageUri}
-            />
+            <View key={message.id} style={styles.messageContainer}>
+              <MessageBubble
+                isUser={message.isUser}
+                message={message.imageUri ? undefined : message.content}
+                imageUri={message.imageUri}
+              />
+            </View>
           ))
         )}
 
@@ -104,6 +129,16 @@ const createStyles = (theme: MD3Theme) =>
       paddingVertical: 16,
       paddingHorizontal: 16,
       flexGrow: 1,
+    },
+    messageContainer: {
+      position: "relative",
+      marginBottom: 8,
+    },
+    playButton: {
+      position: "absolute",
+      bottom: 0,
+      right: 0,
+      zIndex: 1,
     },
     loadingContainer: {
       alignItems: "center",
