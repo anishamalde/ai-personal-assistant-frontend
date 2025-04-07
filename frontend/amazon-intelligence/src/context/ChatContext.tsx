@@ -187,7 +187,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
             setMessages((prev) => [...prev, aiMessage]);
           }
 
-          setFinalTranscription(null);
+          clearTranscriptions();
         } catch (error) {
           console.error("Error processing audio transcript:", error);
 
