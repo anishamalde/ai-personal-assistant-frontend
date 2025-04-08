@@ -1,15 +1,34 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { Icon, useTheme } from "react-native-paper";
+import { Icon, useTheme, ActivityIndicator } from "react-native-paper";
 import { Home, Profile, Chat, Camera, NotFound, LoginScreen } from "./screens";
 import { TabIcon } from "../components";
 import { useAuth } from "../context/AuthContext";
-import { ActivityIndicator, View, StyleSheet, Pressable } from "react-native";
+import { View, StyleSheet, Pressable } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 
-const Tab = createBottomTabNavigator();
-const Stack = createNativeStackNavigator();
-const AuthStack = createNativeStackNavigator();
+// Define param types for each navigator. When a screen doesn't require any parameters for navigation, we use undefined to explicitly show that.
+
+export type TabParamList = {
+  Home: undefined;
+  Chat: undefined;
+  Camera: undefined;
+};
+
+export type RootStackParamList = {
+  HomeTabs: { screen?: keyof TabParamList } | undefined;
+  Profile: undefined;
+  NotFound: undefined;
+};
+
+export type AuthStackParamList = {
+  Login: undefined;
+};
+
+const Tab = createBottomTabNavigator<TabParamList>();
+const Stack = createNativeStackNavigator<RootStackParamList>();
+const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 
 const CustomHeaderButton = ({
   onPress,
@@ -23,8 +42,12 @@ const CustomHeaderButton = ({
   </Pressable>
 );
 
+// Tab navigator component
 function HomeTabs() {
   const theme = useTheme();
+
+  // Get root navigation for navigating outside tabs
+  const navigation = useNavigation<any>();
 
   return (
     <Tab.Navigator
@@ -45,7 +68,7 @@ function HomeTabs() {
       <Tab.Screen
         name="Home"
         component={Home}
-        options={({ navigation }) => ({
+        options={() => ({
           headerRight: () => (
             <CustomHeaderButton onPress={() => navigation.navigate("Profile")}>
               <Icon
@@ -122,7 +145,7 @@ function RootStackNavigator() {
   );
 }
 
-export function Navigation() {
+export function Navigation({ onReady }: { onReady?: () => void }) {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
@@ -134,7 +157,7 @@ export function Navigation() {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer onReady={onReady}>
       {isAuthenticated ? <RootStackNavigator /> : <AuthStackNavigator />}
     </NavigationContainer>
   );
@@ -148,14 +171,11 @@ const styles = StyleSheet.create({
   },
 });
 
-type RootStackParamList = {
-  HomeTabs: undefined;
-  Profile: undefined;
-  NotFound: undefined;
-};
-
+// Extend the default RootParamList with our custom parameters
 declare global {
   namespace ReactNavigation {
-    interface RootParamList extends RootStackParamList {}
+    interface RootParamList extends RootStackParamList {
+      HomeTabs: { screen?: keyof TabParamList } | undefined;
+    }
   }
 }

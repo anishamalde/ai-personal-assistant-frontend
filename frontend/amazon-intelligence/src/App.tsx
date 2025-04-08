@@ -1,3 +1,4 @@
+// Main App component that sets up providers, theme and navigation
 import * as React from "react";
 import { Navigation } from "./navigation";
 import {
@@ -12,21 +13,32 @@ import { PreferencesProvider } from "./context/PreferencesContext";
 import { Amplify } from "aws-amplify";
 import amplifyConfig from "../amplify-config";
 
+// Configure AWS Amplify
 Amplify.configure(amplifyConfig);
 
+// Prevent splash screen from hiding until we're ready
 SplashScreen.preventAutoHideAsync();
 
-const theme = {
+// Custom theme with brand colors
+const theme: Theme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
-    primary: "#1e3050",
-    tertiary: "#FFFFFF99",
-    iconTintColor: "#FFFFFF",
+    primary: "#1e3050", // Primary brand color
+    tertiary: "#FFFFFF99", // Semi-transparent white
+    iconTintColor: "#FFFFFF", // Icon color
   },
 };
 
-export function App() {
+// Deep linking configuration
+const linkingConfig = {
+  enabled: "auto",
+  prefixes: [
+    "amazonintelligence://", // Matches scheme in app.json
+  ],
+};
+
+export function App(): React.ReactElement {
   return (
     <PaperProvider theme={theme}>
       <AuthProvider>
@@ -34,13 +46,9 @@ export function App() {
           <PermissionsProvider>
             <ChatProvider>
               <Navigation
-                linking={{
-                  enabled: "auto",
-                  prefixes: [
-                    "amazonintelligence://", // Match the scheme in app.json
-                  ],
-                }}
+                linking={linkingConfig}
                 onReady={() => {
+                  // Hide splash screen when navigation is ready
                   SplashScreen.hideAsync();
                 }}
               />

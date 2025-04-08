@@ -1,3 +1,4 @@
+// Profile screen showing user information and preferences
 import React from "react";
 import { StyleSheet, View, ScrollView } from "react-native";
 import {
@@ -24,21 +25,17 @@ export function Profile() {
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.container}>
         <Text style={styles.header}>Your Profile</Text>
-
         <Card style={styles.card}>
           <Card.Content>
             <Text variant="titleLarge" style={styles.cardTitle}>
               {userData?.nickname || "User"}
             </Text>
-
             {userData?.email && (
               <Text variant="bodyMedium">Email: {userData.email}</Text>
             )}
-
             {userData?.phone_number && (
               <Text variant="bodyMedium">Phone: {userData.phone_number}</Text>
             )}
-
             {userData?.sub && (
               <Text variant="bodySmall" style={styles.subText}>
                 User ID: {userData.sub}
@@ -46,17 +43,14 @@ export function Profile() {
             )}
           </Card.Content>
         </Card>
-
         <Divider style={styles.divider} />
-
+        {/* Preferences section */}
         <Text style={styles.sectionHeader}>Preferences</Text>
         <Text style={styles.description}>
           Customize your experience with these settings. Changes will be applied
           to future conversations.
         </Text>
-
         <PreferencesForm />
-
         <Button
           mode="contained"
           onPress={handleLogout}
