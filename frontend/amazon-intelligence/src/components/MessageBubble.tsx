@@ -9,6 +9,15 @@ type MessageBubbleProps = {
   imageUri?: string;
 };
 
+/**
+ * MessageBubble component displays chat messages with different styles
+ * for user messages and AI assistant messages
+ *
+ * @param props - Component props
+ * @param props.isUser - Whether the message is from the user (true) or AI (false)
+ * @param props.message - Text content of the message
+ * @param props.imageUri - URI of an image to display instead of text
+ */
 const MessageBubble = ({ isUser, message, imageUri }: MessageBubbleProps) => {
   const theme = useTheme();
   const styles = createStyles(theme);

@@ -10,10 +10,14 @@ import {
   Menu,
   Button,
 } from "react-native-paper";
-import { usePreferences } from "../context/PreferencesContext";
+import { usePreferences, Preferences } from "../context/PreferencesContext";
 
-// List of common Amazon Polly voices with their display names
-const voiceOptions = [
+interface VoiceOption {
+  label: string;
+  value: string;
+}
+
+const voiceOptions: VoiceOption[] = [
   { label: "Joanna (Female, US)", value: "Joanna" },
   { label: "Matthew (Male, US)", value: "Matthew" },
   { label: "Salli (Female, US)", value: "Salli" },
@@ -24,15 +28,20 @@ const voiceOptions = [
   { label: "Russell (Male, Australian)", value: "Russell" },
 ];
 
+/**
+ * PreferencesForm component for managing user settings
+ * Allows users to select AI voice, temperature unit, and measurement system
+ */
 const PreferencesForm = () => {
   const theme = useTheme();
   const styles = createStyles(theme);
   const { preferences, updatePreference } = usePreferences();
-
-  // State for menu visibility
   const [menuVisible, setMenuVisible] = React.useState(false);
 
-  // Get the label for the currently selected voice
+  /**
+   * Gets the display label for the currently selected voice
+   * @returns The label of the selected voice or default text
+   */
   const getSelectedVoiceLabel = () => {
     const selectedVoice = voiceOptions.find(
       (option) => option.value === preferences.aiVoice
@@ -64,7 +73,10 @@ const PreferencesForm = () => {
                 key={option.value}
                 title={option.label}
                 onPress={() => {
-                  updatePreference("aiVoice", option.value);
+                  updatePreference(
+                    "aiVoice",
+                    option.value as Preferences["aiVoice"]
+                  );
                   setMenuVisible(false);
                 }}
               />
@@ -80,7 +92,10 @@ const PreferencesForm = () => {
           <RadioButton.Group
             value={preferences.temperatureUnit}
             onValueChange={(value) =>
-              updatePreference("temperatureUnit", value)
+              updatePreference(
+                "temperatureUnit",
+                value as Preferences["temperatureUnit"]
+              )
             }
           >
             <View style={styles.radioOption}>
@@ -98,7 +113,12 @@ const PreferencesForm = () => {
           <Text style={styles.sectionTitle}>Measurement System</Text>
           <RadioButton.Group
             value={preferences.generalUnits}
-            onValueChange={(value) => updatePreference("generalUnits", value)}
+            onValueChange={(value) =>
+              updatePreference(
+                "generalUnits",
+                value as Preferences["generalUnits"]
+              )
+            }
           >
             <View style={styles.radioOption}>
               <RadioButton value="metric" />

@@ -6,6 +6,10 @@ interface TabIconProps {
   focused: boolean;
 }
 
+/**
+ * TabIcon component for navigation tabs
+ * Displays an icon with different colors based on focus state
+ */
 const TabIcon = ({ source, focused }: TabIconProps) => {
   const theme = useTheme();
   return (

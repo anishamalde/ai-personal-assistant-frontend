@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { View, Animated, Easing, StyleSheet, Text } from "react-native";
-import { useTheme, MD3Theme } from "react-native-paper";
+import { useTheme } from "react-native-paper";
 
 type AnimationVariant = "dots" | "pulse";
 
@@ -11,6 +11,10 @@ interface RecordingAnimationProps {
   text?: string;
 }
 
+/**
+ * Component that displays animated recording indicators
+ * Supports two animation styles: dots (three bouncing dots) or pulse (pulsing circle with text)
+ */
 const RecordingAnimation = ({
   isRecording,
   size = "large",
@@ -19,17 +23,17 @@ const RecordingAnimation = ({
 }: RecordingAnimationProps) => {
   const theme = useTheme();
 
-  // Animations for dots
   const dotAnimations = [
     useRef(new Animated.Value(1)).current,
     useRef(new Animated.Value(1)).current,
     useRef(new Animated.Value(1)).current,
   ];
 
-  // Animation for pulse indicator
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
-  // Handle dots animation
+  /**
+   * Manages dot animation lifecycle based on recording state
+   */
   useEffect(() => {
     if (isRecording && variant === "dots") {
       // Start animation sequence for each dot with different delays
@@ -39,13 +43,19 @@ const RecordingAnimation = ({
     } else if (!isRecording && variant === "dots") {
       // Reset animations when not recording
       dotAnimations.forEach((anim) => {
-        Animated.timing(anim).stop();
+        Animated.timing(anim, {
+          toValue: 1,
+          duration: 0,
+          useNativeDriver: true,
+        }).stop();
         anim.setValue(1);
       });
     }
   }, [isRecording, variant]);
 
-  // Handle pulse animation
+  /**
+   * Manages pulse animation based on recording state
+   */
   useEffect(() => {
     let pulseAnimation: Animated.CompositeAnimation;
 
@@ -77,7 +87,11 @@ const RecordingAnimation = ({
     };
   }, [isRecording, variant]);
 
-  // Create dot animation
+  /**
+   * Creates the animation sequence for a single dot
+   * @param anim - The Animated.Value to animate
+   * @param index - Index of the dot (used for staggered animation)
+   */
   const createDotAnimation = (anim: Animated.Value, index: number) => {
     Animated.loop(
       Animated.sequence([
@@ -103,7 +117,6 @@ const RecordingAnimation = ({
   const marginTop = size === "small" ? 10 : 20;
   const containerHeight = size === "small" ? 10 : 20;
 
-  // Render dots animation
   if (variant === "dots") {
     return (
       <View
@@ -129,7 +142,6 @@ const RecordingAnimation = ({
     );
   }
 
-  // Render pulse animation
   return (
     <View style={styles.pulseContainer}>
       <Animated.View
@@ -153,9 +165,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
   },
-  dot: {
-    // Base styles - specific dimensions are applied inline
-  },
+  dot: {},
   pulseContainer: {
     flex: 1,
     flexDirection: "row",

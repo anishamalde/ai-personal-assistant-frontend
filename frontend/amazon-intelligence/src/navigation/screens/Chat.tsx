@@ -78,7 +78,6 @@ export function Chat() {
             </Text>
           </View>
         ) : (
-          /* Render all messages */
           messages.map((message) => (
             <View key={message.id} style={styles.messageContainer}>
               <MessageBubble
@@ -90,7 +89,6 @@ export function Chat() {
           ))
         )}
 
-        {/* Loading indicator */}
         {isLoading && (
           <View style={styles.loadingContainer}>
             <ActivityIndicator color={theme.colors.primary} size="large" />

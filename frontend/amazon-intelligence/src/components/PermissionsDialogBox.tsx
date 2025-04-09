@@ -7,6 +7,16 @@ interface PermissionsDialogBoxProps {
   requestPermission: () => void;
 }
 
+/**
+ * Dialog component that requests user permission for app features
+ *
+ * Displays a modal dialog explaining why permissions are needed
+ * and provides options to grant or deny the permission request.
+ *
+ * @param props - Component props
+ * @param props.message - Custom message to display in the dialog
+ * @param props.requestPermission - Function to call when user grants permission
+ */
 const PermissionsDialogBox = ({
   message,
   requestPermission,

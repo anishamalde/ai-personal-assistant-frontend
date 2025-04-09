@@ -13,6 +13,15 @@ interface MicrophoneProps {
   mode?: "main" | "chat";
 }
 
+/**
+ * Microphone component for voice input
+ *
+ * This component handles speech recognition functionality for the app,
+ * allowing users to input text via voice.
+ *
+ * @param props - Component props
+ * @param props.mode - Display mode of the microphone ('main' or 'chat')
+ */
 const Microphone = ({ mode = "main" }: MicrophoneProps) => {
   const theme = useTheme();
   const styles = createStyles(theme);
@@ -29,7 +38,6 @@ const Microphone = ({ mode = "main" }: MicrophoneProps) => {
 
   const [recording, setRecording] = useState<boolean>(false);
 
-  // Speech recognition event handlers
   useSpeechRecognitionEvent("start", () => {
     setRecording(true);
   });
@@ -49,7 +57,7 @@ const Microphone = ({ mode = "main" }: MicrophoneProps) => {
   });
 
   useSpeechRecognitionEvent("error", (event) => {
-    console.log(
+    console.error(
       "Speech recognition error:",
       event.error,
       "message:",
@@ -57,6 +65,11 @@ const Microphone = ({ mode = "main" }: MicrophoneProps) => {
     );
   });
 
+  /**
+   * Handles microphone button press
+   * Starts or stops recording based on current state,
+   * or requests permissions if not granted
+   */
   const handleMicPress = async (): Promise<void> => {
     if (microphonePermission === true) {
       if (!recording) {
@@ -69,10 +82,13 @@ const Microphone = ({ mode = "main" }: MicrophoneProps) => {
     }
   };
 
+  /**
+   * Starts the speech recognition process
+   */
   const startSpeechRecognition = async (): Promise<void> => {
     try {
       clearTranscriptions();
-      ExpoSpeechRecognitionModule.start({
+      await ExpoSpeechRecognitionModule.start({
         lang: "en-UK",
         interimResults: true,
         maxAlternatives: 1,
@@ -85,6 +101,9 @@ const Microphone = ({ mode = "main" }: MicrophoneProps) => {
     }
   };
 
+  /**
+   * Stops the speech recognition process
+   */
   const stopSpeechRecognition = async (): Promise<void> => {
     try {
       await ExpoSpeechRecognitionModule.stop();
@@ -93,7 +112,7 @@ const Microphone = ({ mode = "main" }: MicrophoneProps) => {
     }
   };
 
-  // Render the microphone UI based on mode
+  // Render the main microphone UI for the home screen
   if (mode === "main") {
     return (
       <View style={styles.mainContainer}>
@@ -111,48 +130,44 @@ const Microphone = ({ mode = "main" }: MicrophoneProps) => {
         />
       </View>
     );
-  } else if (mode === "chat") {
-    return (
-      <View style={styles.chatContainer}>
-        <View style={styles.inputContainer}>
-          <IconButton
-            icon="microphone"
-            size={30}
-            onPress={handleMicPress}
-            iconColor={theme.colors.background}
-            containerColor={
-              recording ? theme.colors.error : theme.colors.primary
-            }
-            style={styles.micButton}
-          />
-          {recording && (
-            <View style={styles.recordingContainer}>
-              <RecordingAnimation
-                isRecording={recording}
-                size="small"
-                variant="pulse"
-                text={interimTranscription || "Listening..."}
-              />
-            </View>
-          )}
-        </View>
-      </View>
-    );
   }
+
+  // Render the chat input microphone UI
+  return (
+    <View style={styles.chatContainer}>
+      <View style={styles.inputContainer}>
+        <IconButton
+          icon="microphone"
+          size={30}
+          onPress={handleMicPress}
+          iconColor={theme.colors.background}
+          containerColor={recording ? theme.colors.error : theme.colors.primary}
+          style={styles.micButton}
+        />
+        {recording && (
+          <View style={styles.recordingContainer}>
+            <RecordingAnimation
+              isRecording={recording}
+              size="small"
+              variant="pulse"
+              text={interimTranscription || "Listening..."}
+            />
+          </View>
+        )}
+      </View>
+    </View>
+  );
 };
 
 export default Microphone;
 
 const createStyles = (theme: MD3Theme) =>
   StyleSheet.create({
-    // Main mode styles
     mainContainer: {
       alignItems: "center",
       justifyContent: "center",
       width: "100%",
     },
-
-    // Chat mode styles
     chatContainer: {
       width: "100%",
     },
