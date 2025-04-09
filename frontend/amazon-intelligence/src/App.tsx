@@ -1,30 +1,35 @@
-import { Assets as NavigationAssets } from '@react-navigation/elements';
-import { Asset } from 'expo-asset';
-import * as SplashScreen from 'expo-splash-screen';
-import * as React from 'react';
-import { Navigation } from './navigation';
+// Main App component that sets up providers, theme and navigation
+import * as React from "react";
+import { Navigation } from "./navigation";
+import {
+  MD3LightTheme as DefaultTheme,
+  PaperProvider,
+  MD3Theme as Theme,
+} from "react-native-paper";
+import * as SplashScreen from "expo-splash-screen";
 
-Asset.loadAsync([
-  ...NavigationAssets,
-  require('./assets/newspaper.png'),
-  require('./assets/bell.png'),
-]);
-
+// Prevent splash screen from hiding until we're ready
 SplashScreen.preventAutoHideAsync();
 
-export function App() {
+// Custom theme with brand colors
+const theme: Theme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    primary: "#1e3050", // Primary brand color
+    tertiary: "#FFFFFF99", // Semi-transparent white
+  },
+};
+
+export function App(): React.ReactElement {
   return (
-    <Navigation
-      linking={{
-        enabled: 'auto',
-        prefixes: [
-          // Change the scheme to match your app's scheme defined in app.json
-          'helloworld://',
-        ],
-      }}
-      onReady={() => {
-        SplashScreen.hideAsync();
-      }}
-    />
+    <PaperProvider theme={theme}>
+      <Navigation
+        onReady={() => {
+          // Hide splash screen when navigation is ready
+          SplashScreen.hideAsync();
+        }}
+      />
+    </PaperProvider>
   );
 }
