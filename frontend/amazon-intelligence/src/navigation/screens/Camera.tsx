@@ -14,7 +14,7 @@ import { useChat } from "../../context/ChatContext";
 /**
  * Camera component for capturing and processing images
  * Allows users to take pictures, switch between front and back cameras,
- * and send captured images for analysis
+ * and send captured images for analysis only when explicitly requested
  * @returns {JSX.Element} Camera interface component
  */
 export function Camera() {
@@ -23,7 +23,11 @@ export function Camera() {
   const [facing, setFacing] = useState<CameraType>("back");
   const navigation = useNavigation();
 
-  const { imageUri, setImageUri, clearImage } = useChat();
+  // Local state for storing the captured image
+  const [localImageUri, setLocalImageUri] = useState<string | null>(null);
+
+  // Get context methods but don't use them until analyze is pressed
+  const { setImageUri, clearImage } = useChat();
 
   if (!permission) {
     return <ActivityIndicator />;
@@ -44,7 +48,8 @@ export function Camera() {
     try {
       const photo = await ref.current?.takePictureAsync();
       if (photo?.uri) {
-        setImageUri(photo.uri);
+        // Only store the image locally
+        setLocalImageUri(photo.uri);
       }
     } catch (error) {
       console.error("Error taking or storing picture:", error);
@@ -56,36 +61,45 @@ export function Camera() {
   };
 
   const handleRetake = () => {
-    setImageUri(null);
+    // Clear the local image only
+    setLocalImageUri(null);
   };
 
   const navigateToChat = () => {
+    // Only now send the image to context
+    if (localImageUri) {
+      setImageUri(localImageUri);
+    }
+
     navigation.navigate("HomeTabs", {
       screen: "Chat",
     });
+    setLocalImageUri(null);
   };
 
   const renderPicture = () => {
     return (
-      <Card style={styles.pictureContainer}>
-        <Card.Cover
-          style={styles.picture}
-          source={{ uri: imageUri || undefined }}
-        />
-        <Card.Actions style={styles.pictureActions}>
-          <Button style={styles.button} onPress={handleRetake}>
-            Retake
-          </Button>
-          <Button style={styles.button} onPress={navigateToChat}>
-            Analyse
-          </Button>
-        </Card.Actions>
-      </Card>
+      <View style={styles.overlayContainer}>
+        <Card style={styles.pictureContainer}>
+          <Card.Cover
+            style={styles.picture}
+            source={{ uri: localImageUri || undefined }}
+          />
+          <Card.Actions style={styles.pictureActions}>
+            <Button style={styles.button} onPress={handleRetake}>
+              Retake
+            </Button>
+            <Button style={styles.button} onPress={navigateToChat}>
+              Analyse
+            </Button>
+          </Card.Actions>
+        </Card>
+      </View>
     );
   };
 
-  const renderCamera = () => {
-    return (
+  return (
+    <View style={styles.container}>
       <CameraView
         style={styles.camera}
         ref={ref}
@@ -94,37 +108,36 @@ export function Camera() {
         responsiveOrientationWhenOrientationLocked
       >
         <View style={styles.controlsContainer}>
-          <View style={styles.bottomControls}>
-            <IconButton
-              icon="camera-retake"
-              iconColor="white"
-              containerColor="grey"
-              size={40}
-              onPress={clearImage}
-            />
-            <IconButton
-              icon="camera"
-              iconColor="grey"
-              containerColor="white"
-              size={60}
-              onPress={takePicture}
-            />
-            <IconButton
-              icon="camera-flip"
-              iconColor="white"
-              containerColor="grey"
-              size={40}
-              onPress={toggleFacing}
-            />
-          </View>
+          {!localImageUri && (
+            <View style={styles.bottomControls}>
+              <IconButton
+                icon="camera-retake"
+                iconColor="white"
+                containerColor="grey"
+                size={40}
+                onPress={clearImage}
+              />
+              <IconButton
+                icon="camera"
+                iconColor="grey"
+                containerColor="white"
+                size={60}
+                onPress={takePicture}
+              />
+              <IconButton
+                icon="camera-flip"
+                iconColor="white"
+                containerColor="grey"
+                size={40}
+                onPress={toggleFacing}
+              />
+            </View>
+          )}
         </View>
       </CameraView>
-    );
-  };
 
-  return (
-    <View style={styles.container}>
-      {imageUri ? renderPicture() : renderCamera()}
+      {/* Overlay the picture on top when we have an image */}
+      {localImageUri && renderPicture()}
     </View>
   );
 }
@@ -132,9 +145,7 @@ export function Camera() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: "#000", // Changed to black to avoid white flashes
   },
   camera: {
     flex: 1,
@@ -153,8 +164,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 40,
   },
-  bottomLeftPlaceholder: {
-    width: 40,
+  overlayContainer: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.8)",
   },
   pictureContainer: {
     height: "90%",

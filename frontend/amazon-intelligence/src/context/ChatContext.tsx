@@ -267,6 +267,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         setMessages((prev) => [...prev, errorMessage]);
       } finally {
         setIsLoading(false);
+        clearImage();
       }
     }
   };
