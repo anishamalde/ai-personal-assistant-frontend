@@ -143,25 +143,92 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  useEffect(() => {
-    const processTranscription = async () => {
-      if (finalTranscription) {
-        try {
-          setIsLoading(true);
+  const processTranscription = async () => {
+    if (finalTranscription) {
+      try {
+        setIsLoading(true);
 
-          const userMessage: Message = {
-            id: Date.now().toString(),
-            content: finalTranscription,
-            isUser: true,
+        const userMessage: Message = {
+          id: Date.now().toString(),
+          content: finalTranscription,
+          isUser: true,
+          timestamp: new Date(),
+        };
+
+        setMessages((prev) => [...prev, userMessage]);
+
+        // Prepare the request payload according to the specified format
+        const payload = {
+          input: finalTranscription,
+          conversationId: conversationId,
+          context: {
+            location: location || DEFAULT_LOCATION,
+            datetime: getCurrentDatetime(),
+            preferences: {
+              temperatureUnit: preferences.temperatureUnit,
+              generalUnits: preferences.generalUnits,
+              aiVoice: preferences.aiVoice,
+              userName: userData?.nickname || "User",
+            },
+          },
+        };
+
+        const response = await axios.post(`${API_ENDPOINT}chat`, payload);
+
+        if (response.data && response.data.message) {
+          const aiMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            content: response.data.message,
+            isUser: false,
             timestamp: new Date(),
           };
 
-          setMessages((prev) => [...prev, userMessage]);
+          setMessages((prev) => [...prev, aiMessage]);
+        }
 
-          // Prepare the request payload according to the specified format
+        clearTranscriptions();
+      } catch (error) {
+        console.error("Error processing audio transcript:", error);
+
+        const errorMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          content: "Sorry, I couldn't process your message.",
+          isUser: false,
+          timestamp: new Date(),
+        };
+
+        setMessages((prev) => [...prev, errorMessage]);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  const processImageUpload = async () => {
+    if (imageUri) {
+      try {
+        setIsLoading(true);
+
+        // Create a temporary message showing the local image first
+        const imageMessage: Message = {
+          id: Date.now().toString(),
+          content: "",
+          isUser: true,
+          timestamp: new Date(),
+          imageUri: imageUri,
+        };
+
+        setMessages((prev) => [...prev, imageMessage]);
+
+        // Upload image to S3
+        const s3ImageUrl = await uploadImageToS3(imageUri);
+
+        if (s3ImageUrl) {
+          // Now send the message to the API with the S3 image URL
           const payload = {
-            input: finalTranscription,
+            input: "Describe this image.",
             conversationId: conversationId,
+            imagePath: s3ImageUrl,
             context: {
               location: location || DEFAULT_LOCATION,
               datetime: getCurrentDatetime(),
@@ -186,107 +253,29 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
 
             setMessages((prev) => [...prev, aiMessage]);
           }
-
-          clearTranscriptions();
-        } catch (error) {
-          console.error("Error processing audio transcript:", error);
-
-          const errorMessage: Message = {
-            id: (Date.now() + 1).toString(),
-            content: "Sorry, I couldn't process your message.",
-            isUser: false,
-            timestamp: new Date(),
-          };
-
-          setMessages((prev) => [...prev, errorMessage]);
-        } finally {
-          setIsLoading(false);
         }
-      }
-    };
+      } catch (error) {
+        console.error("Error processing image:", error);
 
+        const errorMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          content: "Sorry, I couldn't process your image.",
+          isUser: false,
+          timestamp: new Date(),
+        };
+
+        setMessages((prev) => [...prev, errorMessage]);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  useEffect(() => {
     processTranscription();
   }, [finalTranscription, conversationId, location, preferences, userData]);
 
   useEffect(() => {
-    const processImageUpload = async () => {
-      if (imageUri) {
-        try {
-          setIsLoading(true);
-
-          // Create a temporary message showing the local image first
-          const imageMessage: Message = {
-            id: Date.now().toString(),
-            content: "",
-            isUser: true,
-            timestamp: new Date(),
-            imageUri: imageUri,
-          };
-
-          setMessages((prev) => [...prev, imageMessage]);
-
-          // Upload image to S3
-          const s3ImageUrl = await uploadImageToS3(imageUri);
-
-          console.log(s3ImageUrl);
-
-          if (s3ImageUrl) {
-            // Update the message with the S3 URL
-            setMessages((prev) =>
-              prev.map((msg) =>
-                msg.id === imageMessage.id
-                  ? { ...msg, s3ImageUrl: s3ImageUrl }
-                  : msg
-              )
-            );
-
-            // Now send the message to the API with the S3 image URL
-            const payload = {
-              input: "Describe this image.",
-              conversationId: conversationId,
-              imagePath: s3ImageUrl,
-              context: {
-                location: location || DEFAULT_LOCATION,
-                datetime: getCurrentDatetime(),
-                preferences: {
-                  temperatureUnit: preferences.temperatureUnit,
-                  generalUnits: preferences.generalUnits,
-                  aiVoice: preferences.aiVoice,
-                  userName: userData?.nickname || "User",
-                },
-              },
-            };
-
-            const response = await axios.post(`${API_ENDPOINT}chat`, payload);
-
-            if (response.data && response.data.message) {
-              const aiMessage: Message = {
-                id: (Date.now() + 1).toString(),
-                content: response.data.message,
-                isUser: false,
-                timestamp: new Date(),
-              };
-
-              setMessages((prev) => [...prev, aiMessage]);
-            }
-          }
-        } catch (error) {
-          console.error("Error processing image:", error);
-
-          const errorMessage: Message = {
-            id: (Date.now() + 1).toString(),
-            content: "Sorry, I couldn't process your image.",
-            isUser: false,
-            timestamp: new Date(),
-          };
-
-          setMessages((prev) => [...prev, errorMessage]);
-        } finally {
-          setIsLoading(false);
-        }
-      }
-    };
-
     processImageUpload();
   }, [imageUri]);
 
