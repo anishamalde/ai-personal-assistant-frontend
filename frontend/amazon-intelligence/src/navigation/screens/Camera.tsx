@@ -11,6 +11,12 @@ import { PermissionsDialogBox } from "../../components";
 import { useNavigation } from "@react-navigation/native";
 import { useChat } from "../../context/ChatContext";
 
+/**
+ * Camera component for capturing and processing images
+ * Allows users to take pictures, switch between front and back cameras,
+ * and send captured images for analysis
+ * @returns {JSX.Element} Camera interface component
+ */
 export function Camera() {
   const [permission, requestPermission] = useCameraPermissions();
   const ref = useRef<CameraView>(null);
@@ -33,6 +39,7 @@ export function Camera() {
       </>
     );
   }
+
   const takePicture = async () => {
     try {
       const photo = await ref.current?.takePictureAsync();
@@ -61,7 +68,10 @@ export function Camera() {
   const renderPicture = () => {
     return (
       <Card style={styles.pictureContainer}>
-        <Card.Cover style={styles.picture} source={{ uri: imageUri }} />
+        <Card.Cover
+          style={styles.picture}
+          source={{ uri: imageUri || undefined }}
+        />
         <Card.Actions style={styles.pictureActions}>
           <Button style={styles.button} onPress={handleRetake}>
             Retake

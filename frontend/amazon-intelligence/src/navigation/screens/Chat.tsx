@@ -12,16 +12,22 @@ import { useChat } from "../../context/ChatContext";
 import { MessageBubble, Microphone } from "../../components";
 import usePollyVoice from "../../hooks/usePollyVoice";
 
+/**
+ * Chat screen component displaying conversation messages and voice input
+ * @returns {JSX.Element} Chat interface component
+ */
 export function Chat() {
   const { messages, isLoading, clearMessages, conversationId } = useChat();
   const theme = useTheme();
   const styles = createStyles(theme);
-  const scrollViewRef = useRef(null);
-  const prevMessageCountRef = useRef(0);
+  const scrollViewRef = useRef<ScrollView | null>(null);
+  const prevMessageCountRef = useRef<number>(0);
 
-  // Use the Polly hook
   const { speak } = usePollyVoice();
 
+  /**
+   * Effect to handle automatic scrolling and text-to-speech for new messages
+   */
   useEffect(() => {
     // Handle scrolling
     if (scrollViewRef.current && messages.length > 0) {
@@ -42,6 +48,11 @@ export function Chat() {
     prevMessageCountRef.current = messages.length;
   }, [messages, isLoading, speak]);
 
+  const handleClearMessages = () => {
+    clearMessages();
+    prevMessageCountRef.current = 0;
+  };
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -52,15 +63,7 @@ export function Chat() {
         <Text style={styles.conversationId}>
           Conversation ID: {conversationId.substring(0, 8)}...
         </Text>
-        <Button
-          mode="text"
-          onPress={() => {
-            clearMessages();
-            prevMessageCountRef.current = 0;
-          }}
-          compact
-          icon="delete"
-        >
+        <Button mode="text" onPress={handleClearMessages} compact icon="delete">
           Clear
         </Button>
       </View>

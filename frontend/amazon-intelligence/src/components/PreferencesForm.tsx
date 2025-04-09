@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import {
   Card,
@@ -36,7 +36,7 @@ const PreferencesForm = () => {
   const theme = useTheme();
   const styles = createStyles(theme);
   const { preferences, updatePreference } = usePreferences();
-  const [menuVisible, setMenuVisible] = React.useState(false);
+  const [menuVisible, setMenuVisible] = useState<boolean>(false);
 
   /**
    * Gets the display label for the currently selected voice

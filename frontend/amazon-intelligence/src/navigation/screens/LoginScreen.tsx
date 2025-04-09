@@ -4,17 +4,22 @@ import { TextInput, Button, useTheme, MD3Theme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../context/AuthContext";
 
-// Define error type
 interface AuthError {
   code?: string;
   message?: string;
 }
 
+/**
+ * Login screen component for user authentication
+ * Allows users to sign in with username and password
+ *
+ * @returns {React.JSX.Element} Rendered login screen
+ */
 export function LoginScreen() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [username, setUsername] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
   const { signIn } = useAuth();
   const theme = useTheme();
@@ -28,7 +33,6 @@ export function LoginScreen() {
     }
 
     try {
-      // Attempt login
       setLoading(true);
       setErrorMessage("");
       await signIn(username, password);

@@ -8,29 +8,39 @@ import React, {
 import * as Location from "expo-location";
 import { ExpoSpeechRecognitionModule } from "expo-speech-recognition";
 
-type LocationData = {
+interface LocationData {
   latitude: number;
   longitude: number;
   name: string;
-};
+}
 
-type PermissionsContextType = {
+interface PermissionsContextType {
   locationPermission: string | null;
   microphonePermission: boolean | null;
   showPermissionsDialog: boolean;
   requestLocationPermission: () => Promise<void>;
   requestMicrophonePermission: () => Promise<void>;
+  requestAllPermissions: () => Promise<void>;
   checkLocationPermission: () => Promise<void>;
   checkMicrophonePermission: () => Promise<void>;
   getCurrentLocation: () => Promise<void>;
   setLocation: (location: LocationData) => void;
   location: LocationData | null;
-};
+}
 
+/**
+ * Context for managing app permissions
+ */
 const PermissionsContext = createContext<PermissionsContextType | undefined>(
   undefined
 );
 
+/**
+ * Provider component for managing app permissions
+ * @param {Object} props - Component props
+ * @param {ReactNode} props.children - Child components
+ * @returns {JSX.Element} Permissions provider component
+ */
 export const PermissionsProvider = ({ children }: { children: ReactNode }) => {
   const [locationPermission, setLocationPermission] = useState<string | null>(
     null
@@ -42,11 +52,17 @@ export const PermissionsProvider = ({ children }: { children: ReactNode }) => {
     useState<boolean>(false);
   const [location, setLocation] = useState<LocationData | null>(null);
 
+  /**
+   * Check permissions on component mount
+   */
   useEffect(() => {
     checkLocationPermission();
     checkMicrophonePermission();
   }, []);
 
+  /**
+   * Show permissions dialog when permissions are not granted
+   */
   useEffect(() => {
     // Show dialog if either permission is not granted
     if (
@@ -84,7 +100,6 @@ export const PermissionsProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Request location permission
   const requestLocationPermission = async () => {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -99,26 +114,37 @@ export const PermissionsProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Request microphone permission
   const requestMicrophonePermission = async () => {
     try {
       const result =
         await ExpoSpeechRecognitionModule.requestPermissionsAsync();
-      if (!result.granted) {
-        console.warn("Microphone permission not granted", result);
-        setMicrophonePermission(false);
-        return;
-      }
+
       setMicrophonePermission(result.granted);
+
+      if (!result.granted) {
+        console.warn("Microphone permission request was denied");
+      }
     } catch (error) {
       console.error("Failed to request speech permission:", error);
       setMicrophonePermission(false);
     }
   };
 
+  const requestAllPermissions = async () => {
+    // Request location permission if not granted
+    if (locationPermission !== "granted") {
+      await requestLocationPermission();
+    }
+
+    // Request microphone permission if not granted
+    if (microphonePermission !== true) {
+      await requestMicrophonePermission();
+    }
+  };
+
   const getCurrentLocation = async () => {
     try {
-      const location = await Location.getCurrentPositionAsync({
+      const locationData = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
       });
 
@@ -126,27 +152,30 @@ export const PermissionsProvider = ({ children }: { children: ReactNode }) => {
       let locationName = "Unknown Location";
       try {
         const geocode = await Location.reverseGeocodeAsync({
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
+          latitude: locationData.coords.latitude,
+          longitude: locationData.coords.longitude,
         });
 
         if (geocode && geocode.length > 0) {
           const { city, region, country } = geocode[0];
-          locationName = [
+          const locationParts = [
             city,
             region && region.length <= 3 ? region : null,
             country,
-          ]
-            .filter(Boolean)
-            .join(", ");
+          ].filter(Boolean);
+
+          locationName =
+            locationParts.length > 0
+              ? locationParts.join(", ")
+              : "Unknown Location";
         }
       } catch (error) {
         console.warn("Error getting location name:", error);
       }
 
       setLocation({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
+        latitude: locationData.coords.latitude,
+        longitude: locationData.coords.longitude,
         name: locationName,
       });
     } catch (error) {
@@ -164,6 +193,7 @@ export const PermissionsProvider = ({ children }: { children: ReactNode }) => {
     checkMicrophonePermission,
     getCurrentLocation,
     setLocation,
+    requestAllPermissions,
     location,
   };
 
@@ -174,7 +204,11 @@ export const PermissionsProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// Custom hook to use the permissions context
+/**
+ * Custom hook to access the permissions context
+ * @returns {PermissionsContextType} Permissions context value
+ * @throws {Error} If used outside of a PermissionsProvider
+ */
 export const usePermissions = () => {
   const context = useContext(PermissionsContext);
   if (context === undefined) {

@@ -1,4 +1,4 @@
-import * as React from "react";
+import React, { useState } from "react";
 import { View } from "react-native";
 import { Button, Dialog, Portal, Text } from "react-native-paper";
 
@@ -21,7 +21,7 @@ const PermissionsDialogBox = ({
   message,
   requestPermission,
 }: PermissionsDialogBoxProps) => {
-  const [visible, setVisible] = React.useState(true);
+  const [visible, setVisible] = useState<boolean>(true);
 
   const hideDialog = () => setVisible(false);
 

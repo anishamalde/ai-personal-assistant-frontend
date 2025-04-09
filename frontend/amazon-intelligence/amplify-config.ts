@@ -22,7 +22,7 @@ const amplifyConfig = {
       }
     }
   },
-  Predictions: {
+  predictions: {
     convert: {
       translateText: {
         region: 'us-east-1',
@@ -36,8 +36,7 @@ const amplifyConfig = {
         region: 'us-east-1',
         proxy: false,
         defaults: {
-          VoiceId: 'Ivy',
-          LanguageCode: 'en-US'
+          language: 'en-US'
         }
       },
       transcription: {
@@ -47,15 +46,15 @@ const amplifyConfig = {
           language: 'en-US'
         }
       },
-      interpret: {
-        region: 'us-east-1',
-        proxy: false
-      },
-      identify: {
-        region: 'us-east-1',
-        proxy: false
-      }
     },
+    interpret: {
+      region: 'us-east-1',
+      proxy: false
+    },
+    identify: {
+      region: 'us-east-1',
+      proxy: false
+    }
     }
 };
 

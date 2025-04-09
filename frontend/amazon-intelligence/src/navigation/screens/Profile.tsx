@@ -1,4 +1,3 @@
-// Profile screen showing user information and preferences
 import React from "react";
 import { StyleSheet, View, ScrollView } from "react-native";
 import {
@@ -12,6 +11,12 @@ import {
 import { useAuth } from "../../context/AuthContext";
 import { PreferencesForm } from "../../components";
 
+/**
+ * Profile screen component displaying user information and preferences
+ * Shows user details, allows preference customization, and provides logout functionality
+ *
+ * @returns {React.JSX.Element} Rendered profile screen
+ */
 export function Profile() {
   const { userData, signOut } = useAuth();
   const theme = useTheme();
@@ -44,7 +49,6 @@ export function Profile() {
           </Card.Content>
         </Card>
         <Divider style={styles.divider} />
-        {/* Preferences section */}
         <Text style={styles.sectionHeader}>Preferences</Text>
         <Text style={styles.description}>
           Customize your experience with these settings. Changes will be applied
@@ -73,6 +77,7 @@ const createStyles = (theme: MD3Theme) =>
       flex: 1,
       padding: 16,
       backgroundColor: theme.colors.background,
+      marginBottom: 32,
     },
     header: {
       fontSize: 24,
@@ -110,3 +115,5 @@ const createStyles = (theme: MD3Theme) =>
       paddingVertical: 6,
     },
   });
+
+export default Profile;

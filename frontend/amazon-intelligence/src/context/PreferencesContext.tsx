@@ -33,13 +33,15 @@ const defaultPreferences: Preferences = {
   aiVoice: "Joanna",
 };
 
-/**
- * Generate a storage key for the current user
- * @param userId - The user's unique identifier
- * @returns A unique storage key for the user's preferences
- */
 const getPreferencesKey = (userId: string) => `app_preferences_${userId}`;
 
+/**
+ * Preferences context type definition
+ * @property {Preferences} preferences - Current user preferences
+ * @property {Function} updatePreference - Function to update a single preference
+ * @property {Function} resetPreferences - Function to reset all preferences to defaults
+ * @property {boolean} isLoading - Whether preferences are currently loading
+ */
 interface PreferencesContextType {
   preferences: Preferences;
   updatePreference: <K extends keyof Preferences>(
@@ -54,12 +56,18 @@ const PreferencesContext = createContext<PreferencesContextType | undefined>(
   undefined
 );
 
+/**
+ * Provider component for user preferences management
+ * @param {Object} props - Component props
+ * @param {ReactNode} props.children - Child components
+ * @returns {JSX.Element} Preferences provider component
+ */
 export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
   const [preferences, setPreferences] =
     useState<Preferences>(defaultPreferences);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const { userData, isAuthenticated } = useAuth();
-  const isSavingRef = useRef(false);
+  const isSavingRef = useRef<boolean>(false);
 
   // Get user-specific storage key
   const userId = userData?.sub || "guest";
@@ -131,14 +139,10 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
     }));
   };
 
-  /**
-   * Reset all preferences to default values
-   */
   const resetPreferences = () => {
     setPreferences(defaultPreferences);
   };
 
-  // Create the context value object
   const preferencesContextValue: PreferencesContextType = {
     preferences,
     updatePreference,
@@ -153,6 +157,11 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
+/**
+ * Custom hook to access the preferences context
+ * @returns {PreferencesContextType} Preferences context value
+ * @throws {Error} If used outside of a PreferencesProvider
+ */
 export const usePreferences = (): PreferencesContextType => {
   const context = useContext(PreferencesContext);
 

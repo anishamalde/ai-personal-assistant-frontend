@@ -4,6 +4,7 @@ import { Navigation } from "./navigation";
 import {
   MD3LightTheme as DefaultTheme,
   PaperProvider,
+  MD3Theme as Theme,
 } from "react-native-paper";
 import * as SplashScreen from "expo-splash-screen";
 import { ChatProvider } from "./context/ChatContext";
@@ -26,16 +27,7 @@ const theme: Theme = {
     ...DefaultTheme.colors,
     primary: "#1e3050", // Primary brand color
     tertiary: "#FFFFFF99", // Semi-transparent white
-    iconTintColor: "#FFFFFF", // Icon color
   },
-};
-
-// Deep linking configuration
-const linkingConfig = {
-  enabled: "auto",
-  prefixes: [
-    "amazonintelligence://", // Matches scheme in app.json
-  ],
 };
 
 export function App(): React.ReactElement {
@@ -46,7 +38,6 @@ export function App(): React.ReactElement {
           <PermissionsProvider>
             <ChatProvider>
               <Navigation
-                linking={linkingConfig}
                 onReady={() => {
                   // Hide splash screen when navigation is ready
                   SplashScreen.hideAsync();

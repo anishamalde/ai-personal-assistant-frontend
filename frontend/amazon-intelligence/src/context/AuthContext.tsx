@@ -30,11 +30,21 @@ interface AuthContextType {
   refreshUserData: () => Promise<void>;
 }
 
+/**
+ * Authentication context for managing user sessions
+ * @type {React.Context<AuthContextType | null>}
+ */
 const AuthContext = createContext<AuthContextType | null>(null);
 
+/**
+ * Authentication provider component that manages user authentication state
+ * @param {Object} props - Component props
+ * @param {ReactNode} props.children - Child components
+ * @returns {JSX.Element} Auth provider component
+ */
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [userData, setUserData] = useState<UserData | null>(null);
   const isFetchingRef = useRef(false);
 
@@ -59,9 +69,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       return attributes;
     } catch (error) {
-      if (__DEV__) {
-        console.log("Error fetching user attributes:", error);
-      }
+      console.log("Error fetching user attributes:", error);
       return null;
     } finally {
       isFetchingRef.current = false;
@@ -80,22 +88,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         await fetchUserData();
       }
     } catch (error) {
-      if (__DEV__) {
-        console.log("Auth check error:", error);
-      }
+      console.log("Auth check error:", error);
       setIsAuthenticated(false);
     } finally {
       setIsLoading(false);
     }
   };
 
+  /**
+   * Handles user sign-in process
+   * @param {string} username - User's username or email
+   * @param {string} password - User's password
+   * @returns {Promise<any>} Sign-in result from AWS Amplify
+   * @throws Will throw an error if sign-in fails
+   */
   const handleSignIn = async (username: string, password: string) => {
     try {
-      if (__DEV__) {
-        console.log(
-          `Attempting to sign in user on ${Platform.OS}: ${username}`
-        );
-      }
+      console.log(`Attempting to sign in user on ${Platform.OS}: ${username}`);
 
       const signInResult = await signIn({
         username,
@@ -105,9 +114,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         },
       });
 
-      if (__DEV__) {
-        console.log("Sign in result:", JSON.stringify(signInResult));
-      }
+      console.log("Sign in result:", JSON.stringify(signInResult));
 
       if (signInResult.nextStep.signInStep === "DONE") {
         setIsAuthenticated(true);
@@ -116,31 +123,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       return signInResult;
     } catch (error) {
-      if (__DEV__) {
-        console.log("Sign in error:", error);
-        console.log("Error details:", JSON.stringify(error));
-      }
+      console.log("Sign in error:", error);
+      console.log("Error details:", JSON.stringify(error));
       throw error;
     }
   };
 
   const handleSignOut = async () => {
     try {
-      if (__DEV__) {
-        console.log("Signing out user");
-      }
-
       await signOut();
       setIsAuthenticated(false);
       setUserData(null);
-
-      if (__DEV__) {
-        console.log("User signed out successfully");
-      }
     } catch (error) {
-      if (__DEV__) {
-        console.log("Sign out error:", error);
-      }
+      console.log("Sign out error:", error);
     }
   };
 
@@ -166,6 +161,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
+/**
+ * Custom hook to access the authentication context
+ * @returns {AuthContextType} Authentication context value
+ * @throws {Error} If used outside of an AuthProvider
+ */
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === null) {

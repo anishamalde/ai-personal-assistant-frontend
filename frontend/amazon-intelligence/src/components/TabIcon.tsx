@@ -15,7 +15,7 @@ const TabIcon = ({ source, focused }: TabIconProps) => {
   return (
     <Icon
       source={source}
-      color={focused ? theme.colors.tertiary : theme.colors.iconTintColor}
+      color={focused ? theme.colors.surface : theme.colors.tertiary}
       size={36}
     />
   );

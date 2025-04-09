@@ -7,10 +7,19 @@ import { usePermissions } from "../../context/PermissionsContext";
 import { useChat } from "../../context/ChatContext";
 import { useNavigation } from "@react-navigation/native";
 
+/**
+ * Home screen component for the application
+ * Handles user welcome, permissions, and microphone recording
+ *
+ * @returns {React.JSX.Element} Rendered Home screen component
+ */
 export function Home() {
+  // Theme and navigation hooks
   const theme = useTheme();
   const styles = createStyles(theme);
   const navigation = useNavigation();
+
+  // Context hooks for user data, chat, and permissions
   const { userData } = useAuth();
   const {
     interimTranscription,
@@ -18,39 +27,26 @@ export function Home() {
     setHasFinishedRecording,
   } = useChat();
 
-  const {
-    locationPermission,
-    microphonePermission,
-    showPermissionsDialog,
-    requestLocationPermission,
-    requestMicrophonePermission,
-  } = usePermissions();
+  const { requestAllPermissions, showPermissionsDialog } = usePermissions();
 
-  // Handle requesting both permissions
-  const handleRequestPermissions = async () => {
-    // Request location permission if not granted
-    if (locationPermission !== "granted") {
-      await requestLocationPermission();
-    }
-
-    // Request microphone permission if not granted
-    if (microphonePermission !== true) {
-      await requestMicrophonePermission();
-    }
-  };
-
-  // Navigate to Chat screen after recording is finished and transcription is set
+  /**
+   * Effect to navigate to Chat screen after recording is finished
+   * Adds a short delay to ensure transcription is processed
+   */
   useEffect(() => {
     if (hasFinishedRecording) {
       // Short delay to ensure the transcription is processed before navigation
       const timer = setTimeout(() => {
-        navigation.navigate("Chat");
+        navigation.navigate("HomeTabs", {
+          screen: "Chat",
+        });
         setHasFinishedRecording(false);
       }, 500);
 
+      // Cleanup function to clear timeout
       return () => clearTimeout(timer);
     }
-  }, [hasFinishedRecording, navigation]);
+  }, [hasFinishedRecording, navigation, setHasFinishedRecording]);
 
   return (
     <View style={styles.container}>
@@ -59,11 +55,10 @@ export function Home() {
       ) : (
         <Text style={styles.welcomeText}>Welcome!</Text>
       )}
-
       {showPermissionsDialog && (
         <PermissionsDialogBox
           message="To provide you with personalized responses, we'd like to use your location and microphone. Is that okay?"
-          requestPermission={handleRequestPermissions}
+          requestPermission={requestAllPermissions}
         />
       )}
       <Microphone mode="main" />

@@ -6,22 +6,37 @@ import { Amplify } from "aws-amplify";
 import { fetchAuthSession } from "aws-amplify/auth";
 import { PollyClient, SynthesizeSpeechCommand } from "@aws-sdk/client-polly";
 
+/**
+ * Custom hook for text-to-speech conversion using AWS Polly
+ * @returns {Object} Methods and state for controlling speech playback
+ * @property {(text: string) => Promise<void>} speak - Function to convert text to speech and play it
+ * @property {boolean} isPlaying - Whether audio is currently playing
+ * @property {boolean} isLoading - Whether audio is currently being prepared
+ * @property {() => Promise<void>} stop - Function to stop audio playback
+ */
 const usePollyVoice = () => {
   const { preferences } = usePreferences();
   const voiceId = preferences?.aiVoice;
 
-  const [sound, setSound] = useState(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const isProcessingRef = useRef(false);
+  const [sound, setSound] = useState<Audio.Sound | null>(null);
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const isProcessingRef = useRef<boolean>(false);
 
-  // Cleanup on unmount
+  /**
+   * Cleanup audio resources on component unmount
+   */
   useEffect(() => {
     return () => {
       if (sound) sound.unloadAsync();
     };
   }, [sound]);
 
+  /**
+   * Converts text to speech using AWS Polly and plays the audio
+   * @param {string} text - The text to convert to speech
+   * @returns {Promise<void>}
+   */
   const speak = useCallback(
     async (text: string) => {
       if (!text || isProcessingRef.current) return;
@@ -63,7 +78,6 @@ const usePollyVoice = () => {
         if (!result.AudioStream) throw new Error("No audio stream received");
 
         // Process audio data - manual conversion
-
         const uint8Array = await result.AudioStream.transformToByteArray();
 
         const base64 = btoa(
@@ -110,7 +124,6 @@ const usePollyVoice = () => {
     [sound, voiceId]
   );
 
-  // Stop playback function
   const stop = useCallback(async () => {
     if (sound) {
       await sound.stopAsync();
