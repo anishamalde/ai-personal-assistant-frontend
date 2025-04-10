@@ -70,8 +70,7 @@ export function Chat() {
             <View key={message.id} style={styles.messageContainer}>
               <MessageBubble
                 isUser={message.isUser}
-                message={message.imageUri ? undefined : message.content}
-                imageUri={message.imageUri}
+                message={message.content}
               />
             </View>
           ))
