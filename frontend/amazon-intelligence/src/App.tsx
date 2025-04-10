@@ -10,6 +10,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { Amplify } from "aws-amplify";
 import { AuthProvider } from "./context/AuthContext";
 import { ChatProvider } from "./context/ChatContext";
+import { PreferencesProvider } from "./context/PreferencesContext";
 import { PermissionsProvider } from "./context/PermissionsContext";
 import amplifyConfig from "../amplify-config";
 
@@ -33,16 +34,18 @@ export function App(): React.ReactElement {
   return (
     <PaperProvider theme={theme}>
       <AuthProvider>
-        <PermissionsProvider>
-          <ChatProvider>
-            <Navigation
-              onReady={() => {
-                // Hide splash screen when navigation is ready
-                SplashScreen.hideAsync();
-              }}
-            />
-          </ChatProvider>
-        </PermissionsProvider>
+        <PreferencesProvider>
+          <PermissionsProvider>
+            <ChatProvider>
+              <Navigation
+                onReady={() => {
+                  // Hide splash screen when navigation is ready
+                  SplashScreen.hideAsync();
+                }}
+              />
+            </ChatProvider>
+          </PermissionsProvider>
+        </PreferencesProvider>
       </AuthProvider>
     </PaperProvider>
   );

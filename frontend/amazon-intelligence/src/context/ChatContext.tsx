@@ -8,9 +8,12 @@ import React, {
 import axios from "axios";
 import amplifyConfig from "../../amplify-config";
 import { v4 as uuidv4 } from "uuid";
+import { usePreferences } from "./PreferencesContext";
 import { usePermissions } from "./PermissionsContext";
 import { useAuth } from "./AuthContext";
 import "react-native-get-random-values";
+import { uploadData, getUrl } from "aws-amplify/storage";
+import { fetchAuthSession } from "aws-amplify/auth";
 
 const API_ENDPOINT = amplifyConfig.API.REST.API.endpoint;
 
@@ -25,6 +28,8 @@ type Message = {
   content: string;
   isUser: boolean;
   timestamp: Date;
+  imageUri?: string;
+  s3ImageUrl?: string;
 };
 
 type ChatContextType = {
@@ -61,6 +66,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [conversationId, setConversationId] = useState<string>(uuidv4());
   const [hasFinishedRecording, setHasFinishedRecording] =
     useState<boolean>(false);
+  const { preferences } = usePreferences();
   const { userData } = useAuth();
   const { location } = usePermissions();
 
@@ -79,6 +85,54 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const getCurrentDatetime = (): string => {
     const now = new Date();
     return now.toISOString();
+  };
+
+  // Function to upload image to S3
+  const uploadImageToS3 = async (uri: string): Promise<string | null> => {
+    try {
+      // Convert image URI to blob
+      const response = await fetch(uri);
+      const blob = await response.blob();
+
+      const { identityId } = await fetchAuthSession();
+
+      // Create a filename with conversation ID and timestamp
+      const fileName = `images/${conversationId}/${Date.now()}.jpg`;
+      const s3PrivatePath = `private/${identityId}/${fileName}`;
+
+      // Upload to S3 with private access level
+      const uploadResult = await uploadData({
+        key: fileName,
+        data: blob,
+        options: {
+          accessLevel: "private",
+          contentType: "image/jpeg",
+        },
+      }).result;
+
+      console.log("Image upload successful:", uploadResult);
+
+      // Get a temporary URL for the uploaded image
+      const { url } = await getUrl({
+        key: fileName,
+        options: {
+          accessLevel: "private",
+          expiresIn: 3600, // URL expires in 1 hour
+        },
+      });
+
+      // Generate the full S3 URL for API usage
+      const bucket = amplifyConfig.Storage.S3.bucket || "";
+      const region = amplifyConfig.Storage.S3.region || "us-west-2";
+      const fullS3Url = `https://${bucket}.s3.${region}.amazonaws.com/${s3PrivatePath}`;
+
+      console.log(fullS3Url);
+
+      return fullS3Url;
+    } catch (error) {
+      console.error("Error uploading image to S3:", error);
+      return null;
+    }
   };
 
   const processTranscription = async () => {
@@ -103,9 +157,9 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
             location: location || DEFAULT_LOCATION,
             datetime: getCurrentDatetime(),
             preferences: {
-              temperatureUnit: "celsius",
-              generalUnits: "metric",
-              aiVoice: "Joanna",
+              temperatureUnit: preferences.temperatureUnit,
+              generalUnits: preferences.generalUnits,
+              aiVoice: preferences.aiVoice,
               userName: userData?.nickname || "User",
             },
           },
@@ -144,7 +198,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     processTranscription();
-  }, [finalTranscription, conversationId, location, userData]);
+  }, [finalTranscription, conversationId, location, preferences, userData]);
 
   return (
     <ChatContext.Provider
