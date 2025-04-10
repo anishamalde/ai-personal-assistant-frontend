@@ -5,6 +5,7 @@ import React, {
   ReactNode,
   useEffect,
 } from "react";
+import axios from "axios";
 import amplifyConfig from "../../amplify-config";
 import { v4 as uuidv4 } from "uuid";
 import { usePermissions } from "./PermissionsContext";
@@ -74,9 +75,17 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     setConversationId(uuidv4());
   };
 
+  // Get current datetime in ISO format with timezone
+  const getCurrentDatetime = (): string => {
+    const now = new Date();
+    return now.toISOString();
+  };
+
   const processTranscription = async () => {
     if (finalTranscription) {
       try {
+        setIsLoading(true);
+
         const userMessage: Message = {
           id: Date.now().toString(),
           content: finalTranscription,
@@ -85,6 +94,35 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         };
 
         setMessages((prev) => [...prev, userMessage]);
+
+        // Prepare the request payload according to the specified format
+        const payload = {
+          input: finalTranscription,
+          conversationId: conversationId,
+          context: {
+            location: location || DEFAULT_LOCATION,
+            datetime: getCurrentDatetime(),
+            preferences: {
+              temperatureUnit: "celsius",
+              generalUnits: "metric",
+              aiVoice: "Joanna",
+              userName: userData?.nickname || "User",
+            },
+          },
+        };
+
+        const response = await axios.post(`${API_ENDPOINT}chat`, payload);
+
+        if (response.data && response.data.message) {
+          const aiMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            content: response.data.message,
+            isUser: false,
+            timestamp: new Date(),
+          };
+
+          setMessages((prev) => [...prev, aiMessage]);
+        }
 
         clearTranscriptions();
       } catch (error) {
