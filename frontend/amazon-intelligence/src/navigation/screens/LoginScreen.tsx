@@ -17,7 +17,7 @@ interface AuthError {
  */
 export function LoginScreen() {
   const [username, setUsername] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
+  const [password, setPassword] = useState<string>("Moments25!");
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
 

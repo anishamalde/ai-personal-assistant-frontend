@@ -10,11 +10,10 @@ import * as SplashScreen from "expo-splash-screen";
 import { Amplify } from "aws-amplify";
 import { AuthProvider } from "./context/AuthContext";
 import amplifyConfig from "../amplify-config";
+import { ChatProvider } from "./context/ChatContext";
 
 // Configure AWS Amplify
 Amplify.configure(amplifyConfig);
-
-console.log("Amplify configured with:", amplifyConfig);
 
 // Prevent splash screen from hiding until we're ready
 SplashScreen.preventAutoHideAsync();
@@ -33,12 +32,14 @@ export function App(): React.ReactElement {
   return (
     <PaperProvider theme={theme}>
       <AuthProvider>
-        <Navigation
-          onReady={() => {
-            // Hide splash screen when navigation is ready
-            SplashScreen.hideAsync();
-          }}
-        />
+        <ChatProvider>
+          <Navigation
+            onReady={() => {
+              // Hide splash screen when navigation is ready
+              SplashScreen.hideAsync();
+            }}
+          />
+        </ChatProvider>
       </AuthProvider>
     </PaperProvider>
   );
