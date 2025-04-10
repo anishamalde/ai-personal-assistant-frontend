@@ -1,10 +1,11 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { Icon, useTheme } from "react-native-paper";
-import { Home, Profile, Chat, Camera, NotFound } from "./screens";
+import { Icon, useTheme, ActivityIndicator } from "react-native-paper";
+import { Home, Profile, Chat, Camera, NotFound, LoginScreen } from "./screens";
 import { TabIcon } from "../components";
-import { Pressable } from "react-native";
+import { useAuth } from "../context/AuthContext";
+import { View, StyleSheet, Pressable } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 
 // Define param types for each navigator. When a screen doesn't require any parameters for navigation, we use undefined to explicitly show that.
@@ -21,8 +22,13 @@ export type RootStackParamList = {
   NotFound: undefined;
 };
 
+export type AuthStackParamList = {
+  Login: undefined;
+};
+
 const Tab = createBottomTabNavigator<TabParamList>();
 const Stack = createNativeStackNavigator<RootStackParamList>();
+const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 
 const CustomHeaderButton = ({
   onPress,
@@ -48,7 +54,7 @@ function HomeTabs() {
       screenOptions={() => ({
         tabBarStyle: {
           backgroundColor: theme.colors.primary,
-          height: 80,
+          height: 110,
           borderTopWidth: 0,
         },
         tabBarShowLabel: false,
@@ -127,13 +133,42 @@ function RootStackNavigator() {
   );
 }
 
+function AuthStackNavigator() {
+  return (
+    <AuthStack.Navigator>
+      <AuthStack.Screen
+        name="Login"
+        component={LoginScreen}
+        options={{ headerShown: false }}
+      />
+    </AuthStack.Navigator>
+  );
+}
+
 export function Navigation({ onReady }: { onReady?: () => void }) {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color="#1e3050" />
+      </View>
+    );
+  }
   return (
     <NavigationContainer onReady={onReady}>
-      <RootStackNavigator />
+      {isAuthenticated ? <RootStackNavigator /> : <AuthStackNavigator />}
     </NavigationContainer>
   );
 }
+
+const styles = StyleSheet.create({
+  loaderContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+});
 
 // Extend the default RootParamList with our custom parameters
 declare global {

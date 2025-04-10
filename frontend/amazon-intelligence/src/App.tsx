@@ -8,10 +8,13 @@ import {
 } from "react-native-paper";
 import * as SplashScreen from "expo-splash-screen";
 import { Amplify } from "aws-amplify";
+import { AuthProvider } from "./context/AuthContext";
 import amplifyConfig from "../amplify-config";
 
 // Configure AWS Amplify
 Amplify.configure(amplifyConfig);
+
+console.log("Amplify configured with:", amplifyConfig);
 
 // Prevent splash screen from hiding until we're ready
 SplashScreen.preventAutoHideAsync();
@@ -29,12 +32,14 @@ const theme: Theme = {
 export function App(): React.ReactElement {
   return (
     <PaperProvider theme={theme}>
-      <Navigation
-        onReady={() => {
-          // Hide splash screen when navigation is ready
-          SplashScreen.hideAsync();
-        }}
-      />
+      <AuthProvider>
+        <Navigation
+          onReady={() => {
+            // Hide splash screen when navigation is ready
+            SplashScreen.hideAsync();
+          }}
+        />
+      </AuthProvider>
     </PaperProvider>
   );
 }
