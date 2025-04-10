@@ -148,7 +148,9 @@ export const PermissionsProvider = ({ children }: { children: ReactNode }) => {
         accuracy: Location.Accuracy.Balanced,
       });
 
-      // Try to get the location name using reverse geocoding
+      console.log("Location Data", locationData);
+
+      // Get the location name using reverse geocoding
       let locationName = "Unknown Location";
       try {
         const geocode = await Location.reverseGeocodeAsync({
@@ -156,7 +158,9 @@ export const PermissionsProvider = ({ children }: { children: ReactNode }) => {
           longitude: locationData.coords.longitude,
         });
 
-        if (geocode && geocode.length > 0) {
+        console.log(geocode);
+
+        if (geocode.length > 0) {
           const { city, region, country } = geocode[0];
           const locationParts = [
             city,
