@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { StyleSheet, View, ScrollView } from "react-native";
 import { MD3Theme, useTheme, Text } from "react-native-paper";
-import { Microphone } from "../../components";
+import { Microphone, PermissionsDialogBox } from "../../components";
 import { useAuth } from "../../context/AuthContext";
+import { usePermissions } from "../../context/PermissionsContext";
 import { useChat } from "../../context/ChatContext";
 import { useNavigation } from "@react-navigation/native";
 
@@ -26,6 +27,8 @@ export function Home() {
     setHasFinishedRecording,
   } = useChat();
 
+  const { requestAllPermissions, showPermissionsDialog } = usePermissions();
+
   /**
    * Effect to navigate to Chat screen after recording is finished
    * Adds a short delay to ensure transcription is processed
@@ -34,6 +37,9 @@ export function Home() {
     if (hasFinishedRecording) {
       // Short delay to ensure the transcription is processed before navigation
       const timer = setTimeout(() => {
+        navigation.navigate("HomeTabs", {
+          screen: "Chat",
+        });
         setHasFinishedRecording(false);
       }, 500);
 
@@ -48,6 +54,12 @@ export function Home() {
         <Text style={styles.welcomeText}>Welcome, {userData.nickname}!</Text>
       ) : (
         <Text style={styles.welcomeText}>Welcome!</Text>
+      )}
+      {showPermissionsDialog && (
+        <PermissionsDialogBox
+          message="To provide you with personalized responses, we'd like to use your location and microphone. Is that okay?"
+          requestPermission={requestAllPermissions}
+        />
       )}
       <Microphone mode="main" />
       {interimTranscription && (

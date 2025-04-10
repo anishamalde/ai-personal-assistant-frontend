@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { View, StyleSheet } from "react-native";
 import { IconButton, useTheme, MD3Theme } from "react-native-paper";
-import RecordingAnimation from "./RecordingAnimation";
+import RecordingAnimation from "../components/RecordingAnimation";
 import { useChat } from "../context/ChatContext";
+import { usePermissions } from "../context/PermissionsContext";
 import {
   ExpoSpeechRecognitionModule,
   useSpeechRecognitionEvent,
@@ -32,46 +33,10 @@ const Microphone = ({ mode = "main" }: MicrophoneProps) => {
     setHasFinishedRecording,
   } = useChat();
 
+  const { microphonePermission, requestMicrophonePermission } =
+    usePermissions();
+
   const [recording, setRecording] = useState<boolean>(false);
-
-  const [microphonePermission, setMicrophonePermission] = useState<
-    boolean | null
-  >(null);
-
-  /**
-   * Check permissions on component mount
-   */
-  useEffect(() => {
-    checkMicrophonePermission();
-  }, []);
-
-  const checkMicrophonePermission = async () => {
-    try {
-      const result = await ExpoSpeechRecognitionModule.getPermissionsAsync();
-      setMicrophonePermission(result.granted);
-    } catch (error) {
-      console.error("Failed to check speech permission:", error);
-      setMicrophonePermission(false);
-    }
-  };
-
-  const requestMicrophonePermission = async () => {
-    try {
-      const result =
-        await ExpoSpeechRecognitionModule.requestPermissionsAsync();
-
-      setMicrophonePermission(result.granted);
-
-      console.log(result);
-
-      if (!result.granted) {
-        console.warn("Microphone permission request was denied");
-      }
-    } catch (error) {
-      console.error("Failed to request speech permission:", error);
-      setMicrophonePermission(false);
-    }
-  };
 
   useSpeechRecognitionEvent("start", () => {
     setRecording(true);
@@ -105,6 +70,17 @@ const Microphone = ({ mode = "main" }: MicrophoneProps) => {
    * Starts or stops recording based on current state,
    * or requests permissions if not granted
    */
+  const handleMicPress = async (): Promise<void> => {
+    if (microphonePermission === true) {
+      if (!recording) {
+        await startSpeechRecognition();
+      } else {
+        await stopSpeechRecognition();
+      }
+    } else {
+      await requestMicrophonePermission();
+    }
+  };
 
   /**
    * Starts the speech recognition process
@@ -133,18 +109,6 @@ const Microphone = ({ mode = "main" }: MicrophoneProps) => {
       await ExpoSpeechRecognitionModule.stop();
     } catch (error) {
       console.error("Failed to stop speech recognition:", error);
-    }
-  };
-
-  const handleMicPress = async (): Promise<void> => {
-    if (microphonePermission === true) {
-      if (!recording) {
-        await startSpeechRecognition();
-      } else {
-        await stopSpeechRecognition();
-      }
-    } else {
-      await requestMicrophonePermission();
     }
   };
 
