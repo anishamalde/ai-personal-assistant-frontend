@@ -7,6 +7,11 @@ import {
   MD3Theme as Theme,
 } from "react-native-paper";
 import * as SplashScreen from "expo-splash-screen";
+import { Amplify } from "aws-amplify";
+import amplifyConfig from "../amplify-config";
+
+// Configure AWS Amplify
+Amplify.configure(amplifyConfig);
 
 // Prevent splash screen from hiding until we're ready
 SplashScreen.preventAutoHideAsync();
