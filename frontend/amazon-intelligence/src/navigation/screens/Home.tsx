@@ -34,9 +34,6 @@ export function Home() {
     if (hasFinishedRecording) {
       // Short delay to ensure the transcription is processed before navigation
       const timer = setTimeout(() => {
-        navigation.navigate("HomeTabs", {
-          screen: "Chat",
-        });
         setHasFinishedRecording(false);
       }, 500);
 

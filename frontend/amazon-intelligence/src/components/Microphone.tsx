@@ -105,18 +105,6 @@ const Microphone = ({ mode = "main" }: MicrophoneProps) => {
    * Starts or stops recording based on current state,
    * or requests permissions if not granted
    */
-  const handleMicPress = async (): Promise<void> => {
-    if (microphonePermission === true) {
-      if (!recording) {
-        await startSpeechRecognition();
-      } else {
-        await stopSpeechRecognition();
-      }
-    } else {
-      console.log("here");
-      await requestMicrophonePermission();
-    }
-  };
 
   /**
    * Starts the speech recognition process
@@ -145,6 +133,18 @@ const Microphone = ({ mode = "main" }: MicrophoneProps) => {
       await ExpoSpeechRecognitionModule.stop();
     } catch (error) {
       console.error("Failed to stop speech recognition:", error);
+    }
+  };
+
+  const handleMicPress = async (): Promise<void> => {
+    if (microphonePermission === true) {
+      if (!recording) {
+        await startSpeechRecognition();
+      } else {
+        await stopSpeechRecognition();
+      }
+    } else {
+      await requestMicrophonePermission();
     }
   };
 
