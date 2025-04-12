@@ -10,6 +10,8 @@ import {
 import { Text, useTheme, MD3Theme, Button } from "react-native-paper";
 import { useChat } from "../../context/ChatContext";
 import { MessageBubble, Microphone } from "../../components";
+import usePollyVoice from "../../hooks/usePollyVoice";
+
 /**
  * Chat screen component displaying conversation messages and voice input
  * @returns {JSX.Element} Chat interface component
@@ -21,6 +23,8 @@ export function Chat() {
   const scrollViewRef = useRef<ScrollView | null>(null);
   const prevMessageCountRef = useRef<number>(0);
 
+  const { speak } = usePollyVoice();
+
   /**
    * Effect to handle automatic scrolling and text-to-speech for new messages
    */
@@ -31,7 +35,18 @@ export function Chat() {
         scrollViewRef.current?.scrollToEnd({ animated: true });
       }, 100);
     }
-  }, [messages, isLoading]);
+
+    // Only speak when a new message is added (not on first render or every update)
+    if (messages.length > prevMessageCountRef.current && !isLoading) {
+      const latestMessage = messages[messages.length - 1];
+      if (latestMessage && !latestMessage.isUser && !latestMessage.imageUri) {
+        speak(latestMessage.content);
+      }
+    }
+
+    // Update the message count for next check
+    prevMessageCountRef.current = messages.length;
+  }, [messages, isLoading, speak]);
 
   const handleClearMessages = () => {
     clearMessages();

@@ -10,7 +10,9 @@
   },
   "dependencies": {
     "@aws-amplify/auth": "^6.11.6",
+    "@aws-amplify/predictions": "^6.1.52",
     "@aws-amplify/react-native": "^1.1.7",
+    "@aws-sdk/client-polly": "^3.787.0",
     "@expo/metro-runtime": "~4.0.0",
     "@react-native-async-storage/async-storage": "^1.23.1",
     "@react-navigation/bottom-tabs": "^7.1.1",
@@ -23,6 +25,7 @@
     "dotenv": "^16.4.7",
     "expo": "~52.0.11",
     "expo-asset": "~11.0.1",
+    "expo-av": "^15.0.2",
     "expo-constants": "^17.0.8",
     "expo-dev-client": "~5.0.4",
     "expo-location": "^18.0.8",
@@ -48,5 +51,6 @@
     "@types/react": "~18.3.12",
     "typescript": "^5.7.2"
   },
-  "private": true
+  "private": true,
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }
