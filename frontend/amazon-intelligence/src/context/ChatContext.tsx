@@ -142,6 +142,47 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const makeAuthenticatedApiCall = async (
+    input: string,
+    imagePath?: string
+  ) => {
+    try {
+      // Get the current session to retrieve the idToken
+      const session = await fetchAuthSession();
+      const idToken = session.tokens?.idToken?.toString();
+
+      // Create the common payload structure
+      const payload = {
+        input,
+        conversationId,
+        imagePath,
+        context: {
+          location: location || DEFAULT_LOCATION,
+          datetime: getCurrentDatetime(),
+          preferences: {
+            temperatureUnit: preferences.temperatureUnit,
+            generalUnits: preferences.generalUnits,
+            aiVoice: preferences.aiVoice,
+            userName: userData?.nickname || "User",
+          },
+        },
+      };
+
+      // Make the API call with the token
+      const response = await axios.post(`${API_ENDPOINT}`, payload, {
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error("Chat API request failed:", error);
+      throw error;
+    }
+  };
+
   const processTranscription = async () => {
     if (finalTranscription) {
       try {
@@ -156,28 +197,12 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
 
         setMessages((prev) => [...prev, userMessage]);
 
-        // Prepare the request payload according to the specified format
-        const payload = {
-          input: finalTranscription,
-          conversationId: conversationId,
-          context: {
-            location: location || DEFAULT_LOCATION,
-            datetime: getCurrentDatetime(),
-            preferences: {
-              temperatureUnit: preferences.temperatureUnit,
-              generalUnits: preferences.generalUnits,
-              aiVoice: preferences.aiVoice,
-              userName: userData?.nickname || "User",
-            },
-          },
-        };
+        const data = await makeAuthenticatedApiCall(finalTranscription);
 
-        const response = await axios.post(`${API_ENDPOINT}chat`, payload);
-
-        if (response.data && response.data.message) {
+        if (data && data.message) {
           const aiMessage: Message = {
             id: (Date.now() + 1).toString(),
-            content: response.data.message,
+            content: data.message,
             isUser: false,
             timestamp: new Date(),
           };
@@ -232,28 +257,16 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
 
         if (s3ImageUrl) {
           // Now send the message to the API with the S3 image URL
-          const payload = {
-            input: "Describe this image.",
-            conversationId: conversationId,
-            imagePath: s3ImageUrl,
-            context: {
-              location: location || DEFAULT_LOCATION,
-              datetime: getCurrentDatetime(),
-              preferences: {
-                temperatureUnit: preferences.temperatureUnit,
-                generalUnits: preferences.generalUnits,
-                aiVoice: preferences.aiVoice,
-                userName: userData?.nickname || "User",
-              },
-            },
-          };
 
-          const response = await axios.post(`${API_ENDPOINT}chat`, payload);
+          const data = await makeAuthenticatedApiCall(
+            "Describe this image.",
+            s3ImageUrl
+          );
 
-          if (response.data && response.data.message) {
+          if (data && data.message) {
             const aiMessage: Message = {
               id: (Date.now() + 1).toString(),
-              content: response.data.message,
+              content: data.message,
               isUser: false,
               timestamp: new Date(),
             };
