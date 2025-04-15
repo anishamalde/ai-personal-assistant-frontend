@@ -4,6 +4,7 @@ import * as FileSystem from "expo-file-system";
 import { usePreferences } from "../context/PreferencesContext";
 import { Amplify } from "aws-amplify";
 import { fetchAuthSession } from "aws-amplify/auth";
+import { Platform } from "react-native";
 import { PollyClient, SynthesizeSpeechCommand } from "@aws-sdk/client-polly";
 
 /**
@@ -76,21 +77,28 @@ const usePollyVoice = () => {
         );
 
         if (!result.AudioStream) throw new Error("No audio stream received");
-
-        // Process audio data - manual conversion
         const uint8Array = await result.AudioStream.transformToByteArray();
 
-        const base64 = btoa(
-          Array.from(uint8Array)
-            .map((byte) => String.fromCharCode(byte))
-            .join("")
-        );
+        let audioPath;
 
-        // Save to temporary file
-        const audioPath = `${FileSystem.cacheDirectory}polly_${Date.now()}.mp3`;
-        await FileSystem.writeAsStringAsync(audioPath, base64, {
-          encoding: FileSystem.EncodingType.Base64,
-        });
+        if (Platform.OS === "web") {
+          // Web implementation - use Blob and URL.createObjectURL
+          const blob = new Blob([uint8Array], { type: "audio/mp3" });
+          audioPath = URL.createObjectURL(blob);
+        } else {
+          // Native implementation - save to file system
+          const base64 = btoa(
+            Array.from(uint8Array)
+              .map((byte) => String.fromCharCode(byte))
+              .join("")
+          );
+
+          // Save to temporary file
+          audioPath = `${FileSystem.cacheDirectory}polly_${Date.now()}.mp3`;
+          await FileSystem.writeAsStringAsync(audioPath, base64, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+        }
 
         // Play the audio
         const { sound: newSound } = await Audio.Sound.createAsync(
