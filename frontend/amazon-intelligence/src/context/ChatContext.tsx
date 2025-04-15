@@ -12,7 +12,6 @@ import { usePreferences } from "./PreferencesContext";
 import { usePermissions } from "./PermissionsContext";
 import { useAuth } from "./AuthContext";
 import "react-native-get-random-values";
-import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import { uploadData, getUrl } from "aws-amplify/storage";
 import { fetchAuthSession } from "aws-amplify/auth";
 
@@ -244,16 +243,8 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
 
         setMessages((prev) => [...prev, imageMessage]);
 
-        // Compress the image without resizing
-        const context = ImageManipulator.manipulate(imageUri);
-        const manipulatedImage = await context.renderAsync();
-        const compressedResult = await manipulatedImage.saveAsync({
-          format: SaveFormat.JPEG,
-          compress: 0.1,
-        });
-
         // Upload image to S3
-        const s3ImageUrl = await uploadImageToS3(compressedResult.uri);
+        const s3ImageUrl = await uploadImageToS3(imageUri);
 
         if (s3ImageUrl) {
           // Now send the message to the API with the S3 image URL

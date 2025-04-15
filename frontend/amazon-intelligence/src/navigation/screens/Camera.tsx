@@ -46,7 +46,12 @@ export function Camera() {
 
   const takePicture = async () => {
     try {
-      const photo = await ref.current?.takePictureAsync();
+      const photo = await ref.current?.takePictureAsync({
+        quality: 0.6,
+        imageType: "jpg",
+        skipProcessing: false,
+      });
+
       if (photo?.uri) {
         // Only store the image locally
         setLocalImageUri(photo.uri);
