@@ -99,16 +99,7 @@ const Microphone = ({ mode = "main" }: MicrophoneProps) => {
       event.message
     );
   });
-
-  /**
-   * Handles microphone button press
-   * Starts or stops recording based on current state,
-   * or requests permissions if not granted
-   */
-
-  /**
-   * Starts the speech recognition process
-   */
+  
   const startSpeechRecognition = async (): Promise<void> => {
     try {
       clearTranscriptions();
