@@ -37,7 +37,7 @@ export function LoginScreen() {
       setErrorMessage("");
       await signIn(username, password);
     } catch (error) {
-      console.log("Login error details:", JSON.stringify(error));
+      console.error("Login error:", error);
 
       // Provide specific error messages based on error type
       let message = "Authentication failed";

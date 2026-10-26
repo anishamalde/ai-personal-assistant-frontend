@@ -17,8 +17,8 @@ This is a React Native app using Expo and React Navigation with AWS Amplify for 
 1. Clone the repository:
 
    ```sh
-   git clone <repository-url>
-   cd amazon-intelligence
+   git clone https://github.com/anishamalde/ai-personal-assistant-frontend.git
+   cd ai-personal-assistant-frontend/frontend/amazon-intelligence
    ```
 
 2. Install dependencies:
@@ -66,7 +66,13 @@ Note: All environment variables must use the `EXPO_PUBLIC_` prefix to be accessi
 
 ## Production Deployment
 
-For production deployments with EAS (Expo Application Services):
+For production deployments with EAS (Expo Application Services), first link the app to your own EAS project. This adds your `projectId` to `app.json`:
+
+```sh
+eas init
+```
+
+Then:
 
 1. Set up secrets in EAS:
    ```sh

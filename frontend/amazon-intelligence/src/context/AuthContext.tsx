@@ -12,7 +12,6 @@ import {
   fetchUserAttributes,
   signOut,
 } from "aws-amplify/auth";
-import { Platform } from "react-native";
 
 interface UserData {
   nickname?: string;
@@ -69,7 +68,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       return attributes;
     } catch (error) {
-      console.log("Error fetching user attributes:", error);
+      console.error("Error fetching user attributes:", error);
       return null;
     } finally {
       isFetchingRef.current = false;
@@ -88,7 +87,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         await fetchUserData();
       }
     } catch (error) {
-      console.log("Auth check error:", error);
+      console.error("Auth check error:", error);
       setIsAuthenticated(false);
     } finally {
       setIsLoading(false);
@@ -104,8 +103,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
    */
   const handleSignIn = async (username: string, password: string) => {
     try {
-      console.log(`Attempting to sign in user on ${Platform.OS}: ${username}`);
-
       const signInResult = await signIn({
         username,
         password,
@@ -114,8 +111,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         },
       });
 
-      console.log("Sign in result:", JSON.stringify(signInResult));
-
       if (signInResult.nextStep.signInStep === "DONE") {
         setIsAuthenticated(true);
         await fetchUserData();
@@ -123,8 +118,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       return signInResult;
     } catch (error) {
-      console.log("Sign in error:", error);
-      console.log("Error details:", JSON.stringify(error));
+      console.error("Sign in error:", error);
       throw error;
     }
   };
@@ -135,7 +129,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsAuthenticated(false);
       setUserData(null);
     } catch (error) {
-      console.log("Sign out error:", error);
+      console.error("Sign out error:", error);
     }
   };
 

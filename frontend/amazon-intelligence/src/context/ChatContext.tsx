@@ -109,7 +109,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       const s3PrivatePath = `private/${identityId}/${fileName}`;
 
       // Upload to S3 with private access level
-      const uploadResult = await uploadData({
+      await uploadData({
         key: fileName,
         data: blob,
         options: {
@@ -117,8 +117,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
           contentType: "image/jpeg",
         },
       }).result;
-
-      console.log("Image upload successful:", uploadResult);
 
       // Get a temporary URL for the uploaded image
       const { url } = await getUrl({
